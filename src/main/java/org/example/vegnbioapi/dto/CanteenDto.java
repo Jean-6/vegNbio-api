@@ -21,5 +21,5 @@ public class CanteenDto {
     private Contact contact;
     private List<String> tags; // ex: ["vegan", "bio", "local"]
     private List<String> menuIds; // références vers les menus
-    private List<String> imageUrl;
+    private List<String> pictures;
 }

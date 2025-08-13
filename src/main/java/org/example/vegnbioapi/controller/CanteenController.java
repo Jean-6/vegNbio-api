@@ -4,16 +4,19 @@ package org.example.vegnbioapi.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.CanteenDto;
+import org.example.vegnbioapi.dto.CanteenSearchDto;
 import org.example.vegnbioapi.dto.ResponseWrapper;
 import org.example.vegnbioapi.model.Canteen;
 import org.example.vegnbioapi.service.CanteenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -40,7 +43,7 @@ public class CanteenController {
 
 
     @GetMapping(value = "/", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseWrapper<List<Canteen>>> get(HttpServletRequest request) {
+    public ResponseEntity<ResponseWrapper<List<Canteen>>> get(@ModelAttribute CanteenSearchDto canteenSearchDto, HttpServletRequest request) {
 
         log.info(">> Load all canteens");
 

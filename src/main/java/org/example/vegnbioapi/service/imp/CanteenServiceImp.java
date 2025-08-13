@@ -59,6 +59,7 @@ public class CanteenServiceImp implements CanteenService {
         canteen.setContact(canteenDto.getContact());
         canteen.setTags(canteenDto.getTags());
         canteen.setMenuIds(canteenDto.getMenuIds());
+        canteen.setPictures(imgUrls);
         return canteenRepo.save(canteen);
     }
 
