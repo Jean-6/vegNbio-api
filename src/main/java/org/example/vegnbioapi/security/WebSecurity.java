@@ -31,7 +31,8 @@ public class WebSecurity {
                         .requestMatchers(
                                 "/api/event/**",
                                 "/api/canteen/**",
-                                "/api/menu/**"
+                                "/api/menu/**",
+                                "/api/booking/**"
                         ).permitAll()
                         .anyRequest().authenticated());
         return http.build();
