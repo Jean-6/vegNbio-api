@@ -1,11 +1,12 @@
 package org.example.vegnbioapi.service;
 
-import org.example.vegnbioapi.dto.RoomReservationDto;
-import org.example.vegnbioapi.dto.TableReservationDto;
+import org.example.vegnbioapi.dto.RoomBookingDto;
+import org.example.vegnbioapi.dto.TableBookingDto;
 import org.example.vegnbioapi.model.Booking;
+import org.example.vegnbioapi.model.TableBooking;
 
 public interface BookingService {
 
-    Booking reserveTable(TableReservationDto booking) ;
-    Booking reserveRoom(RoomReservationDto booking) ;
+    TableBooking reserveTable(TableBookingDto booking) ;
+    Booking reserveRoom(RoomBookingDto booking) ;
 }

@@ -7,10 +7,11 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Data
-public class TableReservationDto {
-    private LocalDate date;
+public class TableBookingDto {
+    private String canteenId;
+    private String name;
     private LocalTime startTime;
-    private LocalTime endTime;
-    private Integer numberOfSeats;
+    private LocalDate date;
+    private Integer people;
     private String userId;
 }
