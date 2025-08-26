@@ -4,7 +4,7 @@ package org.example.vegnbioapi.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.*;
-import org.example.vegnbioapi.model.Booking;
+import org.example.vegnbioapi.model.RoomBooking;
 import org.example.vegnbioapi.model.TableBooking;
 import org.example.vegnbioapi.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,11 +35,12 @@ public class BookingController {
     }
 
     @PostMapping(value = "/room", consumes =  MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseWrapper<Booking>> reserveRoom(
+    public ResponseEntity<ResponseWrapper<RoomBooking>> reserveRoom(
             @RequestBody RoomBookingDto roomBookingDto,
             HttpServletRequest request)  {
         log.info(">> Save a room ");
-        Booking  booking =  bookingService.reserveRoom(roomBookingDto);
+        log.info(">> Room reservation DTO : {}", roomBookingDto);
+        RoomBooking booking =  bookingService.reserveRoom(roomBookingDto);
         return ResponseEntity.ok(
                 ResponseWrapper.ok("room saved", request.getRequestURI(), booking));
     }

@@ -17,8 +17,8 @@ public class TableBooking {
     private String name;
     private LocalTime startTime;
     private LocalDate date;
-    //private Status status;
     private Integer people;
     private String userId;
+    //private Status status;
     private LocalDateTime createdAt;
 }

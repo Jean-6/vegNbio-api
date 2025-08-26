@@ -10,19 +10,20 @@ import java.time.LocalTime;
 
 @Data
 @Document
-public class Booking {
+public class RoomBooking {
 
     private String id;
-    private String restaurantId;
-    private String resourceId; // table ou room Id
-    private BookingType type;
+    private String canteenId;
+    private String name;
+    private Integer roomNumber;
     private LocalTime startTime;
     private LocalTime endTime;
     private LocalDate date;
     private Status status;
-    private LocalDateTime createdAt;
-    private Integer numberOfSeats;
+    private Integer people;
     private String userId;
+    //private Status status;
+    private LocalDateTime createdAt;
 
 
 

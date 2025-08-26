@@ -4,12 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.RoomBookingDto;
 import org.example.vegnbioapi.dto.TableBookingDto;
 import org.example.vegnbioapi.exception.ConflictException;
-import org.example.vegnbioapi.model.Booking;
-import org.example.vegnbioapi.model.BookingType;
-import org.example.vegnbioapi.model.Canteen;
-import org.example.vegnbioapi.model.TableBooking;
-import org.example.vegnbioapi.repository.BookingRepo;
+import org.example.vegnbioapi.model.*;
 import org.example.vegnbioapi.repository.CanteenRepo;
+import org.example.vegnbioapi.repository.RoomBookingRepo;
 import org.example.vegnbioapi.repository.TableBookingRepo;
 import org.example.vegnbioapi.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,17 +31,17 @@ import java.util.stream.Collectors;
 public class BookingServiceImp implements BookingService {
 
     @Autowired
-    private BookingRepo bookingRepo;
-    @Autowired
     private TableBookingRepo tableBookingRepo;
     @Autowired
     private CanteenRepo canteenRepo;
     @Autowired
     private MongoTemplate mongoTemplate;
+    @Autowired
+    private RoomBookingRepo roomBookingRepo;
 
 
 
-    public List<Booking> findConflict(String restaurantId, BookingType type, LocalTime start, LocalTime end, LocalDate date) {
+    public List<RoomBooking> findBookingRoomConflict(String restaurantId, BookingType type, LocalTime start, LocalTime end, LocalDate date) {
 
         Criteria criteria = new Criteria().andOperator(
                 Criteria.where("restaurantId").is(restaurantId),
@@ -55,11 +52,11 @@ public class BookingServiceImp implements BookingService {
         );
 
         Query query = new Query(criteria);
-        return mongoTemplate.find(query, Booking.class);
+        return mongoTemplate.find(query, RoomBooking.class);
 
     }
 
-    public List<Booking> findBookingTableConflict(String restaurantId, BookingType type, LocalTime start) {
+    public List<TableBooking> findBookingTableConflict(String restaurantId, BookingType type, LocalTime start) {
 
         Criteria criteria = new Criteria().andOperator(
                 Criteria.where("restaurantId").is(restaurantId),
@@ -67,7 +64,7 @@ public class BookingServiceImp implements BookingService {
                 Criteria.where("startTime").is(start)
         );
         Query query = new Query(criteria);
-        return mongoTemplate.find(query, Booking.class);
+        return mongoTemplate.find(query, TableBooking.class);
 
     }
 
@@ -77,7 +74,7 @@ public class BookingServiceImp implements BookingService {
         Canteen canteen = canteenRepo.findById(booking.getCanteenId())
                 .orElseThrow(() -> new RuntimeException("Canteen not found"));
 
-        List<Booking> conflicts = findBookingTableConflict(
+        List<TableBooking> conflicts = findBookingTableConflict(
                 booking.getCanteenId(),
                 BookingType.TABLE,
                 booking.getStartTime()
@@ -95,7 +92,6 @@ public class BookingServiceImp implements BookingService {
         TableBooking newBooking = new TableBooking();
         newBooking.setCanteenId(booking.getCanteenId());
         newBooking.setName(booking.getName());
-        //newBooking.setType(BookingType.TABLE);
         newBooking.setStartTime(booking.getStartTime());
         newBooking.setDate(booking.getDate());
         newBooking.setPeople(booking.getPeople());
@@ -108,14 +104,14 @@ public class BookingServiceImp implements BookingService {
 
 
     @Override
-    public Booking reserveRoom(RoomBookingDto booking) {
+    public RoomBooking reserveRoom(RoomBookingDto booking) {
 
-        Canteen canteen = canteenRepo.findById(booking.getRestaurantId())
+        Canteen canteen = canteenRepo.findById(booking.getCanteenId())
                 .orElseThrow(() -> new ResourceNotFoundException("Canteen not found"));
 
         // Conflits de réservation pour ce créneau
-        List<Booking> conflicts = findConflict(
-                booking.getRestaurantId(),
+        List<RoomBooking> conflicts = findBookingRoomConflict(
+                booking.getCanteenId(),
                 BookingType.ROOM,
                 booking.getStartTime(),
                 booking.getEndTime(),
@@ -132,9 +128,8 @@ public class BookingServiceImp implements BookingService {
         // Assigne un numéro de salle disponible
         Integer roomNumber = assignRoomNumber(conflicts, canteen.getMeetingRooms());
 
-        Booking newBooking = new Booking();
-        newBooking.setCanteenId(booking.getRestaurantId());
-        newBooking.setType(BookingType.ROOM);
+        RoomBooking newBooking = new RoomBooking();
+        newBooking.setCanteenId(booking.getCanteenId());
         newBooking.setStartTime(booking.getStartTime());
         newBooking.setEndTime(booking.getEndTime());
         newBooking.setDate(booking.getDate());
@@ -142,13 +137,13 @@ public class BookingServiceImp implements BookingService {
         newBooking.setUserId(booking.getUserId());
         newBooking.setRoomNumber(roomNumber);
 
-        return bookingRepo.save(newBooking);
+        return roomBookingRepo.save(newBooking);
     }
 
 
-    private Integer assignRoomNumber(List<Booking> conflicts, int totalRooms) {
+    private Integer assignRoomNumber(List<RoomBooking> conflicts, int totalRooms) {
         Set<Integer> used = conflicts.stream()
-                .map(Booking::getRoomNumber)
+                .map(RoomBooking::getRoomNumber)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
