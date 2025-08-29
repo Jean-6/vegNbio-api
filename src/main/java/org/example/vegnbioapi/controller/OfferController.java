@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.OfferDto;
 import org.example.vegnbioapi.dto.ResponseWrapper;
+import org.example.vegnbioapi.dto.OfferFilter;
 import org.example.vegnbioapi.model.Offer;
 import org.example.vegnbioapi.service.OfferService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,14 +40,17 @@ public class OfferController {
     }
 
     @GetMapping(value="/", produces= MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseWrapper<List <Offer>>> getAllOffers(HttpServletRequest request) {
+    public ResponseEntity<ResponseWrapper<List <Offer>>> getAllOffers(
+            @ModelAttribute OfferFilter filters,
+            HttpServletRequest request) {
 
+        log.info(">> Load filtered offers  ");
+        log.debug(">> offerDto  : {}", filters);
         log.info(">> Get all offers ");
-        List<Offer> offers = offerService.getOffers();
+        List<Offer> offers = offerService.loadFilteredOffers(filters);
         return ResponseEntity.ok(
                 ResponseWrapper.ok("offer saved", request.getRequestURI(), offers));
     }
-
 
 
 }

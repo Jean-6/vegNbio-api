@@ -3,12 +3,15 @@ package org.example.vegnbioapi.service.imp;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.OfferDto;
-import org.example.vegnbioapi.model.Canteen;
+import org.example.vegnbioapi.dto.OfferFilter;
 import org.example.vegnbioapi.model.Offer;
 import org.example.vegnbioapi.repository.OfferRepo;
 import org.example.vegnbioapi.service.OfferService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -30,6 +33,8 @@ public class OfferServiceImp implements OfferService {
     private OfferRepo offerRepo;
     @Autowired
     private S3Client s3Client;
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
 
     @Override
@@ -73,8 +78,34 @@ public class OfferServiceImp implements OfferService {
         return offerRepo.save(offer);
     }
 
+
     @Override
-    public List<Offer> getOffers() {
-        return offerRepo.findAll();
+    public List<Offer> loadFilteredOffers( OfferFilter filters) {
+        Query query = new Query();
+        if(filters.getType() != null && !filters.getType().isEmpty()){
+            query.addCriteria(Criteria.where("type").in(filters.getType()));
+        }
+        if(filters.getName() != null && !filters.getName().isEmpty() ){
+            query.addCriteria(Criteria.where("name").in(filters.getName()));
+        }
+        if(filters.getCategory() != null && !filters.getCategory().isEmpty()  ){
+            query.addCriteria(Criteria.where("category").in(filters.getCategory()));
+        }
+
+        if(filters.getMinPrice() != null && !filters.getMinPrice().isNaN()  ){
+            query.addCriteria(Criteria.where("minPrice").gte(filters.getMinPrice()));
+        }
+
+        if(filters.getMaxPrice() != null && !filters.getMaxPrice().isNaN()  ){
+            query.addCriteria(Criteria.where("maxPrice").lte(filters.getMaxPrice()));
+        }
+
+        if(filters.getOrigin() != null && !filters.getOrigin().isEmpty()  ){
+            query.addCriteria(Criteria.where("origin").in(filters.getOrigin()));
+        }
+
+        return mongoTemplate.find(query, Offer.class);
+
     }
+
 }
