@@ -4,19 +4,17 @@ package org.example.vegnbioapi.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.CanteenDto;
-import org.example.vegnbioapi.dto.CanteenSearchDto;
+import org.example.vegnbioapi.dto.CanteenFilter;
 import org.example.vegnbioapi.dto.ResponseWrapper;
 import org.example.vegnbioapi.model.Canteen;
 import org.example.vegnbioapi.service.CanteenService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -43,12 +41,27 @@ public class CanteenController {
 
 
     @GetMapping(value = "/", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseWrapper<List<Canteen>>> get(@ModelAttribute CanteenSearchDto canteenSearchDto, HttpServletRequest request) {
+    public ResponseEntity<ResponseWrapper<List<Canteen>>> get(
+            @ModelAttribute CanteenFilter filters,
+            HttpServletRequest request) {
 
         log.info(">> Load all canteens");
 
-        List<Canteen> canteens = canteenService.getCanteens();
+        List<Canteen> canteens = canteenService.loadFilteredCanteens(filters);
         return ResponseEntity.ok(
                 ResponseWrapper.ok("Canteen list", request.getRequestURI(), canteens));
+    }
+
+    @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseWrapper<Canteen>> delete(
+            @PathVariable("id") String id,
+            HttpServletRequest request)  {
+
+        log.info("id : "+ id);
+
+        log.info(">> Delete a canteen ");
+        Canteen  canteen =  canteenService.delete(id);
+        return ResponseEntity.ok(
+                ResponseWrapper.ok("Canteen deleted", request.getRequestURI(), canteen));
     }
 }

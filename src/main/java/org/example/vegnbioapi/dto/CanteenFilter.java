@@ -7,9 +7,9 @@ import java.time.LocalDateTime;
 
 
 @Data
-public class CanteenSearchDto {
+public class CanteenFilter {
 
-    private String restaurantName;
+    private String canteenName;
     private String dishName;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

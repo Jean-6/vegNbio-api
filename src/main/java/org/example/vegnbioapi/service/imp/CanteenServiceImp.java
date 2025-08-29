@@ -1,14 +1,21 @@
 package org.example.vegnbioapi.service.imp;
 
+import com.mongodb.internal.operation.AggregateOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.CanteenDto;
-import org.example.vegnbioapi.dto.EventDto;
+import org.example.vegnbioapi.dto.CanteenFilter;
+import org.example.vegnbioapi.dto.OfferFilter;
 import org.example.vegnbioapi.model.Canteen;
-import org.example.vegnbioapi.model.Event;
+import org.example.vegnbioapi.model.Offer;
 import org.example.vegnbioapi.repository.CanteenRepo;
 import org.example.vegnbioapi.service.CanteenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -29,6 +36,8 @@ public class CanteenServiceImp implements CanteenService {
     private CanteenRepo canteenRepo;
     @Autowired
     private S3Client s3Client;
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
 
 
@@ -54,6 +63,7 @@ public class CanteenServiceImp implements CanteenService {
         canteen.setDesc(canteenDto.getDesc());
         canteen.setEquipments(canteenDto.getEquipments());
         canteen.setSeats(canteenDto.getSeats());
+        canteen.setMeetingRooms(canteenDto.getMeetingRooms());
         canteen.setOpeningHoursMap(canteenDto.getOpeningHoursMap());
         canteen.setLocation(canteenDto.getLocation());
         canteen.setContact(canteenDto.getContact());
@@ -64,8 +74,38 @@ public class CanteenServiceImp implements CanteenService {
     }
 
     @Override
-    public List<Canteen> getCanteens() {
-        return canteenRepo.findAll();
+    public List<Canteen> loadFilteredCanteens(CanteenFilter filters) {
+
+       List<AggregationOperation> pipeline = new ArrayList<>();
+
+       pipeline.add(Aggregation.lookup("menu","menuIds","_id","menu"));
+
+       pipeline.add(Aggregation.unwind("menu",true));
+
+       pipeline.add(Aggregation.unwind("menu.dishes", true));
+
+       List<Criteria> criteriaList = new ArrayList<>();
+
+       if(filters.getCanteenName() != null && !filters.getCanteenName().isEmpty()){
+           criteriaList.add(Criteria.where("name").regex(filters.getCanteenName(),"i"));
+       }
+
+        Aggregation aggregation = Aggregation.newAggregation(pipeline);
+        return  mongoTemplate.aggregate(aggregation,"canteen",Canteen.class).getMappedResults();
+
+
+    }
+
+    @Override
+    public Canteen delete(String id) {
+
+        Query query = new Query(Criteria.where("id").is(id));
+        Canteen canteenDeleted =  mongoTemplate.findAndRemove(query, Canteen.class);
+
+        assert canteenDeleted != null;
+        log.info("deleted : "+ canteenDeleted.getId());
+
+        return canteenDeleted;
     }
 
 

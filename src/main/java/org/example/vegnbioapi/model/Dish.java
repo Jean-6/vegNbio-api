@@ -13,14 +13,11 @@ import java.util.Set;
 public class Dish {
     @Id
     private String id;
-    private DishType dishType;
     private String name;
     private String desc;
     private double price;
+    private DishType dishType;
     private List<String> allergens; //[Gluten,Crustacés,Œufs,Poisson]
     private List<String> pictures;
-    private Set<DietType> dietTypeSet;
-
-
-
+    private Set<DietType> dietType;
 }
