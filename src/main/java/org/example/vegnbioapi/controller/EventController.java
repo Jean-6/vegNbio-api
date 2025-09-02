@@ -4,18 +4,17 @@ package org.example.vegnbioapi.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.EventDto;
+import org.example.vegnbioapi.dto.EventFilter;
 import org.example.vegnbioapi.dto.ResponseWrapper;
 import org.example.vegnbioapi.model.Event;
 import org.example.vegnbioapi.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -41,18 +40,17 @@ public class EventController {
     }
 
 
-    @GetMapping(value = "/", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseWrapper<List<Event>>> get(
-            @RequestParam(required = false) String restaurantId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+    @GetMapping(value="/", produces= MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseWrapper<List <Event>>> getAllEvents(
+            @ModelAttribute EventFilter filters,
             HttpServletRequest request) {
 
-        log.info(">> Load all Events");
-
-        List<Event> events = eventService.getEvents(restaurantId, startDate, endDate);
+        log.info(">> Load filtered events  ");
+        log.debug(">> Event filter DTO  : {}", filters);
+        log.info(">> Get all Events ");
+        List<Event> events = eventService.loadFilteredEvents(filters);
         return ResponseEntity.ok(
-                ResponseWrapper.ok("event list", request.getRequestURI(), events));
+                ResponseWrapper.ok("offer saved", request.getRequestURI(), events));
     }
 
 }

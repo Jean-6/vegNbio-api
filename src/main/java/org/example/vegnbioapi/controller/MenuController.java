@@ -77,10 +77,15 @@ public class MenuController {
 
 
     @GetMapping(value="/", produces= MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseWrapper<List<Menu>>> get(HttpServletRequest hsr) {
+    public ResponseEntity<ResponseWrapper<List<Menu>>> get(
+
+            @RequestParam(required = false) String restaurantId,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String dietType,
+            HttpServletRequest hsr) {
         return ResponseEntity.ok(
                 ResponseWrapper.ok(
-                        "all menus",hsr.getRequestURI(),menuService.loadAll()));
+                        "all menus",hsr.getRequestURI(),menuService.loadFilteredMenus(restaurantId,name,dietType)));
     }
 
 }
