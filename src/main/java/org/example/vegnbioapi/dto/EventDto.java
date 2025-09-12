@@ -7,6 +7,7 @@ import org.example.vegnbioapi.model.Location;
 
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 
@@ -17,9 +18,11 @@ public class EventDto {
     private String desc;
     private String type;
     private Location location;
-    @JsonFormat(pattern = "dd-MM-yyyy")
-    private LocalDate startDate;
-    @JsonFormat(pattern = "dd-MM-yyyy")
-    private LocalDate endDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    private LocalTime startTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    private LocalTime endTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "yyyy-MM-dd")
+    private LocalDate date;
     private List<String> participantsIds;
 }

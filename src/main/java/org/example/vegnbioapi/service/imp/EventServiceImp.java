@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.EventDto;
 import org.example.vegnbioapi.dto.EventFilter;
 import org.example.vegnbioapi.model.Event;
-import org.example.vegnbioapi.repository.CustomEventRepo;
 import org.example.vegnbioapi.repository.EventRepo;
 import org.example.vegnbioapi.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +19,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,8 +32,6 @@ public class EventServiceImp implements EventService {
     private String bucketName;
     @Autowired
     private EventRepo eventRepo;
-    @Autowired
-    private CustomEventRepo customEventRepo;
     @Autowired
     private S3Client s3Client;
     @Autowired
@@ -62,9 +60,11 @@ public class EventServiceImp implements EventService {
         event.setDesc(eventDto.getDesc());
         event.setType(eventDto.getType());
         event.setLocation(eventDto.getLocation());
-        event.setStartDate(eventDto.getStartDate());
-        event.setEndDate(eventDto.getEndDate());
+        event.setStartTime(eventDto.getStartTime());
+        event.setEndTime(eventDto.getEndTime());
+        event.setDate(eventDto.getDate());
         event.setPictures(pictureUrls);
+        event.setCreatedAt(LocalDateTime.now());
         return  eventRepo.save(event);
     }
 

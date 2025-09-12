@@ -6,6 +6,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 
@@ -20,11 +22,14 @@ public class Event {
     private String desc;
     private String type; //degustation, atelier, conférence…
     private Location location;
-    @JsonFormat(pattern = "dd-MM-yyyy")
-    private LocalDate startDate;
-    @JsonFormat(pattern = "dd-MM-yyyy")
-    private LocalDate endDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    private LocalTime startTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    private LocalTime endTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "yyyy-MM-dd")
+    private LocalDate date;
     private List<String> pictures;
     private List<String> participantsIds;
+    private LocalDateTime createdAt;
 }
 
