@@ -1,6 +1,7 @@
 package org.example.vegnbioapi.model;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -15,7 +16,9 @@ public class TableBooking {
     private String id;
     private String canteenId;
     private String name;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
     private LocalTime startTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "yyyy-MM-dd")
     private LocalDate date;
     private Integer people;
     private String userId;

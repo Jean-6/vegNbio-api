@@ -1,13 +1,10 @@
 package org.example.vegnbioapi.service.imp;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.vegnbioapi.dto.RoomBookingDto;
-import org.example.vegnbioapi.dto.TableBookingDto;
+import org.example.vegnbioapi.dto.*;
 import org.example.vegnbioapi.exception.ConflictException;
 import org.example.vegnbioapi.model.*;
-import org.example.vegnbioapi.repository.CanteenRepo;
-import org.example.vegnbioapi.repository.RoomBookingRepo;
-import org.example.vegnbioapi.repository.TableBookingRepo;
+import org.example.vegnbioapi.repository.*;
 import org.example.vegnbioapi.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -19,9 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -38,7 +33,10 @@ public class BookingServiceImp implements BookingService {
     private MongoTemplate mongoTemplate;
     @Autowired
     private RoomBookingRepo roomBookingRepo;
-
+    @Autowired
+    private EventBookingRepo eventBookingRepo ;
+    @Autowired
+    private EventRepo eventRepo ;
 
 
     public List<RoomBooking> findBookingRoomConflict(String restaurantId, BookingType type, LocalTime start, LocalTime end, LocalDate date) {
@@ -140,6 +138,15 @@ public class BookingServiceImp implements BookingService {
         return roomBookingRepo.save(newBooking);
     }
 
+    @Override
+    public EventBooking reserveEvent(EventBookingDto eventBooking) {
+
+        EventBooking newEventBooking = new EventBooking();
+        newEventBooking.setEventId(eventBooking.getEventId());
+        newEventBooking.setUserId(eventBooking.getUserId());
+        newEventBooking.setCreatedAt(LocalDateTime.now());
+        return eventBookingRepo.save(newEventBooking);
+    }
 
     private Integer assignRoomNumber(List<RoomBooking> conflicts, int totalRooms) {
         Set<Integer> used = conflicts.stream()
@@ -153,6 +160,79 @@ public class BookingServiceImp implements BookingService {
             }
         }
         throw new RuntimeException("Impossible d'attribuer un numéro de salle");
+    }
+
+    @Override
+    public List<BookingDto> getUserReservations(BookingFilter filters ) {
+
+        if(filters.getUserId() == null || filters.getUserId().isBlank()){
+            throw new IllegalArgumentException("user id is required");
+        }
+
+        List<BookingDto> reservations = new ArrayList<>();
+
+        // --- Events ---
+        List<EventBooking> eventBookings = eventBookingRepo.findByUserId(filters.getUserId());
+        for(EventBooking b : eventBookings){
+            eventRepo.findById(b.getEventId()).ifPresent(
+                    event -> {
+                        String canteenName = canteenRepo.findById(event.getCanteenId())
+                                .map(Canteen::getName)
+                                .orElse("Inconnu");
+                        reservations.add(new BookingDto(
+                                event.getTitle(),
+                                "EVENT",
+                                canteenName,
+                                event.getLocation(),
+                                event.getStartTime(),
+                                event.getEndTime(),
+                                event.getDate()
+
+                        ));
+                    }
+            );
+
+        }
+
+        // --- Réservations de tables ---
+        List<TableBooking> tableBookings = tableBookingRepo.findByUserId(filters.getUserId());
+        for(TableBooking b : tableBookings){
+            tableBookingRepo.findById(b.getId()).ifPresent(
+                    table -> {
+                        Optional<Canteen> canteen= canteenRepo.findById(table.getCanteenId());
+                        canteen.ifPresent(c->{
+                            reservations.add(new BookingDto(
+                                    "TABLE",
+                                    c.getName(),
+                                    c.getLocation(),
+                                    b.getStartTime(),
+                                    b.getDate()
+                            ));
+
+                        });
+
+            });
+        }
+
+        // --- ROOMS ---
+        List<RoomBooking> roomBookings = roomBookingRepo.findByUserId(filters.getUserId());
+        for (RoomBooking b : roomBookings) {
+            roomBookingRepo.findById(b.getId()).ifPresent(room -> {
+                canteenRepo.findById(room.getCanteenId()).ifPresent(canteen -> {
+                    reservations.add(new BookingDto(
+                            room.getName(),          // title
+                            "ROOM",                  // type
+                            canteen.getName(),       // canteenName
+                            canteen.getLocation(),   // location from restaurant
+                            b.getStartTime(),        // startTime
+                            b.getEndTime(),          // endTime
+                            b.getDate()              // date
+                    ));
+                });
+            });
+        }
+        
+        return reservations;
     }
 
 
