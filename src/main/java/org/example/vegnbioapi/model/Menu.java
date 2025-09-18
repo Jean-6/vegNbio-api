@@ -13,7 +13,7 @@ import java.util.List;
 public class Menu {
     @Id
     private String id;
-    private String restaurantId;
+    private String canteenId;
     private String name;
     private String desc;
     private List<Dish> dishes;

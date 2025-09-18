@@ -65,9 +65,14 @@ public class MenuController {
                 .map(menu -> {
                     List<String> imageUrls = s3Storage.upload(pictures);
                     Dish dish = convertDtoToModel(dishDto);
+
                     dish.setId(UUID.randomUUID().toString());
+
                     dish.setPictures(imageUrls);
-                    menu.setDishes(new ArrayList<>());
+
+                    if(menu.getDishes() == null){
+                        menu.setDishes(new ArrayList<>());
+                    }
                     menu.getDishes().add(dish);
                     return ResponseEntity.ok(
                             ResponseWrapper.ok("menu updated",hsr.getRequestURI(),menuRepo.save(menu)));
@@ -86,6 +91,17 @@ public class MenuController {
         return ResponseEntity.ok(
                 ResponseWrapper.ok(
                         "all menus",hsr.getRequestURI(),menuService.loadFilteredMenus(restaurantId,name,dietType)));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseWrapper<String>> deleteMenu(@PathVariable String id,HttpServletRequest hsr) {
+        log.info(">> delete menu ");
+        menuService.deleteMenu(id);
+        return ResponseEntity.ok(
+                ResponseWrapper.ok(
+                        "menu deleted : {}",id,hsr.getRequestURI()
+                )
+        );
     }
 
 }

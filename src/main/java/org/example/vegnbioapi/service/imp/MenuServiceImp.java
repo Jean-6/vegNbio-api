@@ -7,10 +7,13 @@ import org.example.vegnbioapi.repository.MenuRepo;
 import org.example.vegnbioapi.service.MenuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 
-import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +28,9 @@ public class MenuServiceImp implements MenuService {
     private String bucketName;
     @Autowired
     private S3Client s3Client;
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
 
 
     @Override
@@ -32,16 +38,11 @@ public class MenuServiceImp implements MenuService {
 
         Menu menu = new Menu();
         menu.setId(menuDto.getId());
-        menu.setRestaurantId(menuDto.getRestaurantId());
+        menu.setCanteenId(menuDto.getCanteenId());
         menu.setName(menuDto.getName());
         menu.setDesc(menuDto.getDesc());
         return menuRepo.save(menu);
     }
-
-    /*@Override
-    public List<Menu> getMenus(String restaurantId, LocalDateTime startDate, LocalDateTime endDate) {
-        return menuRepo.findAll();
-    }*/
 
     @Override
     public Optional<Menu> loadById(String id) {
@@ -50,9 +51,29 @@ public class MenuServiceImp implements MenuService {
     }
 
     @Override
-    public List<Menu> loadAll() {
-        return menuRepo.findAll();
+    public List<Menu> loadFilteredMenus(String restaurantId, String name, String diet) {
+        Query query = new Query();
+        if(restaurantId != null && !restaurantId.isEmpty()){
+            query.addCriteria(Criteria.where("restaurantId").is(restaurantId));
+        }
+        if(name != null ){
+            query.addCriteria(Criteria.where("name").in(name));
+        }
+        if(diet != null ){
+            query.addCriteria(Criteria.where("dietType").in(diet));
+        }
+        query.addCriteria(Criteria.where("dishes").exists(true).ne(Collections.emptyList()));
+        return mongoTemplate.find(query, Menu.class);
+
     }
 
+    @Override
+    public void deleteMenu(String id) {
+        if (!menuRepo.existsById(id)) {
+            throw new RuntimeException("Menu not found with id: " + id);
+        }
+        menuRepo.deleteById(id);
+
+    }
 
 }

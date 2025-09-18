@@ -1,8 +1,8 @@
 package org.example.vegnbioapi.dto;
 
 import lombok.Data;
-import org.example.vegnbioapi.model.DietType;
-import org.example.vegnbioapi.model.DishType;
+import org.example.vegnbioapi.model.Diet;
+import org.example.vegnbioapi.model.Type;
 
 import java.util.List;
 import java.util.Set;
@@ -15,7 +15,7 @@ public class DishDto {
     private String name;
     private String desc;
     private double price;
-    private DishType dishType;
+    private Type type;
     private List<String> allergens;
-    private Set<DietType> dietType;
+    private Set<Diet> diet;
 }

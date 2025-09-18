@@ -1,6 +1,6 @@
 package org.example.vegnbioapi.model;
 
-public enum DietType {
+public enum Diet {
     VEGAN,
     VEGETARIAN,
     GLUTEN_FREE
