@@ -39,6 +39,7 @@ public class WebSecurity {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/api/user/**",
                                 "/api/event/**",
                                 "/api/canteen/**",
                                 "/api/menu/**",
