@@ -2,6 +2,7 @@ package org.example.vegnbioapi.service;
 
 import org.example.vegnbioapi.dto.EventDto;
 import org.example.vegnbioapi.dto.EventFilter;
+import org.example.vegnbioapi.model.Canteen;
 import org.example.vegnbioapi.model.Event;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,5 +13,6 @@ public interface EventService {
 
     Event saveEvent(EventDto eventDto, List<MultipartFile> pictures) throws IOException;
     List<Event> loadFilteredEvents(EventFilter eventFilter) ;
+    Event delete(String id);
 
 }

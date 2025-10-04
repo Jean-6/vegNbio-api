@@ -53,4 +53,17 @@ public class EventController {
                 ResponseWrapper.ok("offer saved", request.getRequestURI(), events));
     }
 
+    @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseWrapper<Event>> delete(
+            @PathVariable("id") String id,
+            HttpServletRequest request)  {
+
+        log.info("id : "+ id);
+
+        log.info(">> Delete a event ");
+        Event event =  eventService.delete(id);
+        return ResponseEntity.ok(
+                ResponseWrapper.ok("Event deleted", request.getRequestURI(), event));
+    }
+
 }

@@ -2,7 +2,7 @@ package org.example.vegnbioapi.model;
 
 public enum Status {
 
-    CONFIRMED,
+    APPROVED,
     PENDING,
-    CANCEL
+    REJECTED
 }

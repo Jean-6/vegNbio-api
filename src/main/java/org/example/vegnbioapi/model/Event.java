@@ -20,7 +20,7 @@ public class Event {
     private String canteenId;
     private String title;
     private String desc;
-    private String type; //degustation, atelier, conférence…
+    private String type;
     private Location location;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
     private LocalTime startTime;
@@ -28,8 +28,10 @@ public class Event {
     private LocalTime endTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "yyyy-MM-dd")
     private LocalDate date;
+    private EventStatus status;
     private List<String> pictures;
     private List<String> participantsIds;
+    private Approval approval;
     private LocalDateTime createdAt;
 }
 
