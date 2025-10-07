@@ -2,7 +2,7 @@ package org.example.vegnbioapi.service.imp;
 
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.vegnbioapi.dto.EventDto;
+import org.example.vegnbioapi.dto.AddEventDto;
 import org.example.vegnbioapi.dto.EventFilter;
 import org.example.vegnbioapi.model.*;
 import org.example.vegnbioapi.repository.CanteenRepo;
@@ -61,12 +61,11 @@ public class EventServiceImp implements EventService {
 
 
     @Override
-    public Event saveEvent(EventDto eventDto, List<MultipartFile> pictures) throws IOException {
+    public Event saveEvent(AddEventDto addEventDto, List<MultipartFile> pictures) throws IOException {
 
-
-        Canteen canteen = canteenRepo.findById(eventDto.getCanteenId())
+        Canteen canteen = canteenRepo.findById(addEventDto.getCanteenId())
                 .orElseThrow(()-> new NotAcceptableStatusException("Canteen not found"));
-        
+
         List<String> pictureUrls = new ArrayList<>();
         for(int index = 0; index< pictures.size(); index++){
             String filename = "img_"+ index + "."+Utils.getExtension(pictures.get(index).getOriginalFilename());
@@ -81,16 +80,16 @@ public class EventServiceImp implements EventService {
             pictureUrls.add("https://" + bucketName + ".s3.amazonaws.com/" + key);
         }
         Event event = new Event();
-        event.setCanteenId(eventDto.getCanteenId());
-        event.setTitle(eventDto.getTitle());
-        event.setDesc(eventDto.getDesc());
-        event.setType(eventDto.getType());
-        
+        event.setCanteenId(addEventDto.getCanteenId());
+        event.setTitle(addEventDto.getTitle());
+        event.setDesc(addEventDto.getDesc());
+        event.setType(addEventDto.getType());
+
         event.setLocation(canteen.getLocation());
 
-        event.setStartTime(eventDto.getStartTime());
-        event.setEndTime(eventDto.getEndTime());
-        event.setDate(eventDto.getDate());
+        event.setStartTime(addEventDto.getStartTime());
+        event.setEndTime(addEventDto.getEndTime());
+        event.setDate(addEventDto.getDate());
 
         event.setStatus(EventStatus.UPCOMING);
 
@@ -99,7 +98,7 @@ public class EventServiceImp implements EventService {
         Approval app= new Approval();
         app.setStatus(Status.PENDING);
         event.setApproval(app);
-        
+
         event.setCreatedAt(LocalDateTime.now());
         return  eventRepo.save(event);
     }

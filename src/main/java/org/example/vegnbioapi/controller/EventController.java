@@ -3,7 +3,7 @@ package org.example.vegnbioapi.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vegnbioapi.dto.EventDto;
+import org.example.vegnbioapi.dto.AddEventDto;
 import org.example.vegnbioapi.dto.EventFilter;
 import org.example.vegnbioapi.dto.ResponseWrapper;
 import org.example.vegnbioapi.model.Event;
@@ -25,10 +25,9 @@ public class EventController {
     @Autowired
     private EventService eventService;
 
-
     @PostMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<Event>> save(
-            @RequestPart("data") EventDto eventDto,
+            @RequestPart("data") AddEventDto eventDto,
             @RequestPart("pictures") List<MultipartFile> pictures,
             HttpServletRequest request) throws IOException {
 
