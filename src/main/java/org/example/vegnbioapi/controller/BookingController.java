@@ -4,7 +4,6 @@ package org.example.vegnbioapi.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.*;
-import org.example.vegnbioapi.model.Canteen;
 import org.example.vegnbioapi.model.EventBooking;
 import org.example.vegnbioapi.model.RoomBooking;
 import org.example.vegnbioapi.model.TableBooking;
@@ -29,14 +28,12 @@ public class BookingController {
     private BookingService bookingService;
 
 
-    @GetMapping( produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<List<BookingDto>>> get(
             @Validated @ModelAttribute BookingFilter filters,
             HttpServletRequest request) {
-
         log.info(">> Load all reservations");
-
-        List<BookingDto> reservations = bookingService.getUserReservations(filters);
+        List<BookingDto> reservations = bookingService.getReservations(filters);
         return ResponseEntity.ok(
                 ResponseWrapper.ok("Reservation list", request.getRequestURI(), reservations));
     }
@@ -65,7 +62,7 @@ public class BookingController {
 
     @PostMapping(value = "/event", consumes =  MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<EventBooking>> reserveEvent(
-            @RequestBody EventBookingDto eventBooking ,
+            @RequestBody AddEventBooking eventBooking ,
             HttpServletRequest request)  {
         log.info(">> Save a booking event ");
         log.info(">> Event reservation DTO : {}", eventBooking);

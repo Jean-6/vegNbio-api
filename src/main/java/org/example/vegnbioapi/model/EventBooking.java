@@ -13,6 +13,7 @@ public class EventBooking {
 
     private String id;
     private String eventId;
+    //private String canteenId;
     private String userId;
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
     private LocalDateTime createdAt;

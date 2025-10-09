@@ -15,7 +15,7 @@ public class TableBooking {
 
     private String id;
     private String canteenId;
-    private String name;
+    //private String name;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
     private LocalTime startTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "yyyy-MM-dd")

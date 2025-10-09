@@ -13,5 +13,7 @@ public class RoomBookingDto {
     private LocalTime endTime;
     private LocalDate date;
     private Integer people;
-    private String userId;
+    //private String userId;
+    private UserInfo user;
+    private CanteenInfo canteen;
 }

@@ -11,6 +11,6 @@ public interface BookingService {
 
     TableBooking reserveTable(TableBookingDto booking) ;
     RoomBooking reserveRoom(RoomBookingDto booking) ;
-    EventBooking reserveEvent(EventBookingDto eventbooking) ;
-    List<BookingDto> getUserReservations(BookingFilter filters);
+    EventBooking reserveEvent(AddEventBooking eventbooking) ;
+    List<BookingDto> getReservations(BookingFilter filters);
 }
