@@ -1,8 +1,11 @@
 package org.example.vegnbioapi.service.imp;
 
+
 import lombok.extern.slf4j.Slf4j;
+import org.example.vegnbioapi.dto.AddMenuItem;
 import org.example.vegnbioapi.dto.MenuDto;
-import org.example.vegnbioapi.model.Menu;
+import org.example.vegnbioapi.model.*;
+import org.example.vegnbioapi.repository.MenuItemRepo;
 import org.example.vegnbioapi.repository.MenuRepo;
 import org.example.vegnbioapi.service.MenuService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +14,14 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +31,9 @@ import java.util.Optional;
 @Service
 public class MenuServiceImp implements MenuService {
 
+
+    @Autowired
+    private MenuItemRepo menuItemRepo;
     @Autowired
     private MenuRepo menuRepo;
     @Value("${aws.s3-bucket-name}")
@@ -32,6 +44,63 @@ public class MenuServiceImp implements MenuService {
     private MongoTemplate mongoTemplate;
 
 
+    @Override
+    public MenuItem saveMenuItem(AddMenuItem dto,List<MultipartFile> pictures) throws IOException {
+
+        MenuItem menuItemToSave = null ;
+
+        log.info("drink:"+ dto.toString());
+
+        switch (dto.getItemType().toLowerCase()) {
+            case "drink" -> {
+                Drink drink = new Drink();
+                drink.setCanteenId(dto.getCanteenId());
+                drink.setName(dto.getName());
+                drink.setDesc(dto.getDesc());
+                drink.setPrice(dto.getPrice() != null ? dto.getPrice() : BigDecimal.ZERO);
+                drink.setVolume(dto.getVolume() );
+                drink.setAlcoholic(dto.getIsAlcoholic());
+                drink.setGaseous(dto.getIsGaseous());
+                menuItemToSave = drink;
+            }
+            case "meal" -> {
+                Meal meal = new Meal();
+                meal.setCanteenId(dto.getCanteenId());
+                meal.setName(dto.getName());
+                meal.setDesc(dto.getDesc());
+                meal.setPrice(dto.getPrice() != null ? dto.getPrice() : BigDecimal.ZERO);
+                meal.setIngredients(dto.getIngredients());
+                meal.setAllergens(dto.getAllergens());
+                meal.setFoodType(dto.getFoodType());
+                menuItemToSave = meal;
+            }
+        }
+
+        assert menuItemToSave != null;
+        List<String> pictureUrls = savePictures(pictures);
+        menuItemToSave.setImageUrls(pictureUrls);
+        return menuItemRepo.save(menuItemToSave);
+    }
+
+
+    @Override
+    public List<String> savePictures(List<MultipartFile> pictures) throws IOException {
+        List<String> imgUrls = new ArrayList<>();
+
+        for(int index = 0; index< pictures.size(); index++){
+            String filename = "img_"+ index + "."+Utils.getExtension(pictures.get(index).getOriginalFilename());
+            String key = "menuItem/" + Utils.generateFolderName() + "/"+filename ;
+            s3Client.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(key)
+                            .contentType(pictures.get(index).getContentType())
+                            .build(),
+                    RequestBody.fromBytes(pictures.get(index).getBytes()));
+            imgUrls.add("https://" + bucketName + ".s3.amazonaws.com/" + key);
+        }
+        return imgUrls;
+    }
 
     @Override
     public Menu saveMenu(MenuDto menuDto) {
@@ -76,4 +145,16 @@ public class MenuServiceImp implements MenuService {
 
     }
 
+    @Override
+    public MenuItem deleteMenuItem(String id) {
+        Query query = new Query(Criteria.where("id").is(id));
+        MenuItem menuItemDeleted = mongoTemplate.findAndRemove(query, MenuItem.class);
+
+        if (menuItemDeleted == null) {
+            throw new RuntimeException("Menu not found with id: " + id);
+        }
+
+        log.info("Deleted menu item with id: {}", menuItemDeleted.getId());
+        return menuItemDeleted;
+    }
 }

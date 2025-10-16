@@ -10,4 +10,5 @@ public class MenuDto {
     private String name;
     private String desc;
     private double price;
+    private UserInfo user;
 }

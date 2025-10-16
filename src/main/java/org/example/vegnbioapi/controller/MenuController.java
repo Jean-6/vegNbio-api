@@ -4,11 +4,12 @@ package org.example.vegnbioapi.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.example.vegnbioapi.dto.AddMenuItem;
 import org.example.vegnbioapi.dto.DishDto;
-import org.example.vegnbioapi.dto.MenuDto;
 import org.example.vegnbioapi.dto.ResponseWrapper;
 import org.example.vegnbioapi.model.Dish;
 import org.example.vegnbioapi.model.Menu;
+import org.example.vegnbioapi.model.MenuItem;
 import org.example.vegnbioapi.repository.MenuRepo;
 import org.example.vegnbioapi.service.MenuService;
 import org.example.vegnbioapi.service.S3Storage;
@@ -44,7 +45,21 @@ public class MenuController {
     }
 
 
-    @PostMapping(value="/", consumes = MediaType.APPLICATION_JSON_VALUE, produces= MediaType.APPLICATION_JSON_VALUE)
+
+    @PostMapping(value="/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> createMenuItem(
+            @RequestPart("data") String menuItemJson,
+            @RequestPart(value = "pictures", required = false) List<MultipartFile> pictures,
+            HttpServletRequest request) throws IOException {
+
+        AddMenuItem dto = objectMapper.readValue(menuItemJson, AddMenuItem.class);
+
+        MenuItem saved = menuService.saveMenuItem(dto, pictures);
+        return ResponseEntity.ok(
+                ResponseWrapper.ok("menu saved", request.getRequestURI(), saved));
+    }
+
+    /*@PostMapping(value="/", consumes = MediaType.APPLICATION_JSON_VALUE, produces= MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<Menu>> save(
             @RequestBody MenuDto menuDto,
             HttpServletRequest request) throws IOException {
@@ -54,7 +69,7 @@ public class MenuController {
             Menu newMenu = menuService.saveMenu(menuDto);
             return ResponseEntity.ok(
                     ResponseWrapper.ok("menu saved", request.getRequestURI(), newMenu));
-    }
+    }*/
 
     @PatchMapping(value="/{id}/dishes", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<Menu>> updateMenu(@PathVariable String id,
@@ -93,10 +108,22 @@ public class MenuController {
                         "all menus",hsr.getRequestURI(),menuService.loadFilteredMenus(restaurantId,name,dietType)));
     }
 
-    @DeleteMapping("/{id}")
+    /*@DeleteMapping("/{id}")
     public ResponseEntity<ResponseWrapper<String>> deleteMenu(@PathVariable String id,HttpServletRequest hsr) {
         log.info(">> delete menu ");
         menuService.deleteMenu(id);
+        return ResponseEntity.ok(
+                ResponseWrapper.ok(
+                        "menu deleted : {}",id,hsr.getRequestURI()
+                )
+        );
+    }*/
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseWrapper<String>> deleteItemMenu(@PathVariable String id,HttpServletRequest hsr) {
+        log.info(">> delete menu ");
+
+        MenuItem itemMenu= menuService.deleteMenuItem(id);
         return ResponseEntity.ok(
                 ResponseWrapper.ok(
                         "menu deleted : {}",id,hsr.getRequestURI()
