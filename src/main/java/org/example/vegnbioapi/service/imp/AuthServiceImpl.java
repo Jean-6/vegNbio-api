@@ -3,6 +3,7 @@ package org.example.vegnbioapi.service.imp;
 import lombok.extern.slf4j.Slf4j;
 
 import org.example.vegnbioapi.dto.*;
+import org.example.vegnbioapi.exception.BadRequestException;
 import org.example.vegnbioapi.model.User;
 import org.example.vegnbioapi.exception.ConflictException;
 import org.example.vegnbioapi.repository.UserRepository;
@@ -36,7 +37,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final BCryptPasswordEncoder passwordEncoder  = new BCryptPasswordEncoder();
 
-    public LoginResponse register(SignupRequest request) {
+    public LoginResponse register(RegisterRequest request) {
 
 
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -52,7 +53,22 @@ public class AuthServiceImpl implements AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        Role defaultRole = new Role(ERole.CUSTOMER);
+        Role defaultRole ;//= new Role(ERole.RESTORER);
+
+        if("web".equalsIgnoreCase(request.getSource())){
+            defaultRole = new Role (ERole.RESTORER);
+        }else if("mobile".equalsIgnoreCase(request.getSource())){
+            if("supplier".equalsIgnoreCase(request.getUserType())){
+                defaultRole = new Role(ERole.SUPPLIER);
+            }else if("customer".equalsIgnoreCase(request.getUserType())){
+                defaultRole = new Role(ERole.CUSTOMER);
+            }else {
+                throw new BadRequestException("User type required for mobile registration");
+            }
+        }
+        else {
+            throw new BadRequestException("Invalid registration source");
+        }
 
         user.setRoles(Set.of(defaultRole));
 
@@ -61,6 +77,7 @@ public class AuthServiceImpl implements AuthService {
         String jwtToken = jwtUtils.generateJwtToken(userDetails);
 
         return new LoginResponse(
+
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),

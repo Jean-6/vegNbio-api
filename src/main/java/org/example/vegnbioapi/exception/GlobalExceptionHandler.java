@@ -34,9 +34,15 @@ public class GlobalExceptionHandler {
     /**
      * missing parameters and invalid request
      */
-
+    @ExceptionHandler(org.example.vegnbioapi.exception.BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handle400(BadRequestException ex, HttpServletRequest request) {
+        return new ResponseEntity<>(
+                buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI()),
+                HttpStatus.BAD_REQUEST
+        );
+    }
     @ExceptionHandler({BindException.class, MissingServletRequestParameterException.class})
-    public ResponseEntity<ErrorResponse> handle400(BadRequestException ex, HttpServletRequest request){
+    public ResponseEntity<ErrorResponse> handleBindingErrors(BadRequestException ex, HttpServletRequest request){
         return new ResponseEntity<>(
                 buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI()), HttpStatus.BAD_REQUEST);
     }
