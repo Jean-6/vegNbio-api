@@ -17,7 +17,7 @@ public class Dish {
     private String desc;
     private double price;
     private Type type;
-    private List<String> allergens; //[Gluten,Crustacés,Œufs,Poisson]
+    private List<String> allergens; 
     private List<String> pictures;
     private Set<Diet> diet;
 }
