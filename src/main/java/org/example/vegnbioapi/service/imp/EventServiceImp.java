@@ -8,11 +8,13 @@ import org.example.vegnbioapi.model.*;
 import org.example.vegnbioapi.repository.CanteenRepo;
 import org.example.vegnbioapi.repository.EventRepo;
 import org.example.vegnbioapi.service.EventService;
+import org.example.vegnbioapi.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.NotAcceptableStatusException;
@@ -24,6 +26,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @Slf4j
@@ -40,6 +43,13 @@ public class EventServiceImp implements EventService {
     private CanteenRepo canteenRepo;
     @Autowired
     private MongoTemplate mongoTemplate;
+    @Autowired
+    private StorageService storageService;
+
+    @Override
+    public List<Canteen> getEventForCurrentUser(String username, EventFilter filters) {
+        return List.of();
+    }
 
     /**
      * public EventStatus computeStatus() {
@@ -92,7 +102,6 @@ public class EventServiceImp implements EventService {
         event.setDate(addEventDto.getDate());
 
         event.setStatus(EventStatus.UPCOMING);
-
         event.setPictures(pictureUrls);
 
         Approval app= new Approval();
@@ -124,13 +133,14 @@ public class EventServiceImp implements EventService {
 
     @Override
     public Event delete(String id) {
-        Query query = new Query(Criteria.where("id").is(id));
-        Event eventDeleted =  mongoTemplate.findAndRemove(query, Event.class);
-
-        assert eventDeleted != null;
-        log.info("deleted : "+ eventDeleted.getId());
-
-        return eventDeleted;
+        Optional<Event> eventOpt = eventRepo.findById(id);
+        if (eventOpt.isEmpty()) {
+            throw new ResourceNotFoundException("event not found with id : " + id);
+        }
+        Event event = eventOpt.get();
+        storageService.deleteFromS3(event.getPictures());
+        eventRepo.deleteById(event.getId());
+        return  event;
     }
 
 

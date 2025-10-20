@@ -10,6 +10,7 @@ import org.example.vegnbioapi.repository.MenuItemRepo;
 import org.example.vegnbioapi.repository.MenuRepo;
 import org.example.vegnbioapi.repository.UserRepo;
 import org.example.vegnbioapi.service.MenuService;
+import org.example.vegnbioapi.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -48,6 +49,8 @@ public class MenuServiceImp implements MenuService {
     private S3Client s3Client;
     @Autowired
     private MongoTemplate mongoTemplate;
+    @Autowired
+    private StorageService storageService;
 
 
 
@@ -88,7 +91,7 @@ public class MenuServiceImp implements MenuService {
 
     @Override
     public MenuItem saveMenuItem(Principal principal, AddMenuItem dto,List<MultipartFile> pictures) throws IOException {
-        
+
         User user = userRepo.findUserByUsername(principal.getName())
                 .orElseThrow(()-> new ResourceNotFoundException("User not found "));
 
@@ -194,14 +197,13 @@ public class MenuServiceImp implements MenuService {
 
     @Override
     public MenuItem deleteMenuItem(String id) {
-        Query query = new Query(Criteria.where("id").is(id));
-        MenuItem menuItemDeleted = mongoTemplate.findAndRemove(query, MenuItem.class);
-
-        if (menuItemDeleted == null) {
-            throw new RuntimeException("Menu not found with id: " + id);
+        Optional<MenuItem> menuItemOpt= menuItemRepo.findById(id);
+        if (menuItemOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Menu item not found with id : " + id);
         }
-
-        log.info("Deleted menu item with id: {}", menuItemDeleted.getId());
-        return menuItemDeleted;
+        MenuItem menuItem = menuItemOpt.get();
+        storageService.deleteFromS3(menuItem.getPictures());
+        menuRepo.deleteById(menuItem.getId());
+        return  menuItem;
     }
 }
