@@ -4,22 +4,23 @@ package org.example.vegnbioapi.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vegnbioapi.dto.AddMenuItem;
-import org.example.vegnbioapi.dto.DishDto;
-import org.example.vegnbioapi.dto.ResponseWrapper;
+import org.example.vegnbioapi.dto.*;
 import org.example.vegnbioapi.model.Dish;
 import org.example.vegnbioapi.model.Menu;
 import org.example.vegnbioapi.model.MenuItem;
 import org.example.vegnbioapi.repository.MenuRepo;
 import org.example.vegnbioapi.service.MenuService;
-import org.example.vegnbioapi.service.S3Storage;
+import org.example.vegnbioapi.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -34,7 +35,7 @@ public class MenuController {
     @Autowired
     private MenuRepo menuRepo;
     @Autowired
-    private S3Storage s3Storage;
+    private StorageService storageService;
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -45,19 +46,46 @@ public class MenuController {
     }
 
 
+    @GetMapping(value="/me", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseWrapper<List<MenuItem>>> get(
+            @ModelAttribute ItemMenuFilter filters,
+            Principal principal,
+            HttpServletRequest hsr) {
+
+        log.info(">> Load all items menu for current user");
+
+        List<MenuItem> items = menuService.getItemMenuForCurrentUser(principal,filters);
+        return ResponseEntity.ok(
+                ResponseWrapper.ok("Items menu loaded", hsr.getRequestURI(), items));
+    }
+
+    @GetMapping(value="/", produces= MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseWrapper<List<MenuItem>>> get(
+            @ModelAttribute ItemMenuFilter filters,
+            HttpServletRequest hsr) {
+
+        return ResponseEntity.ok(
+                ResponseWrapper.ok(
+                        "Items menu loaded",hsr.getRequestURI(),menuService.getItemsMenu(filters)));
+    }
+
+
 
     @PostMapping(value="/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createMenuItem(
+            Principal principal,
             @RequestPart("data") String menuItemJson,
             @RequestPart(value = "pictures", required = false) List<MultipartFile> pictures,
             HttpServletRequest request) throws IOException {
 
         AddMenuItem dto = objectMapper.readValue(menuItemJson, AddMenuItem.class);
 
-        MenuItem saved = menuService.saveMenuItem(dto, pictures);
+        MenuItem saved = menuService.saveMenuItem(principal,dto, pictures);
         return ResponseEntity.ok(
                 ResponseWrapper.ok("menu saved", request.getRequestURI(), saved));
     }
+
+
 
     /*@PostMapping(value="/", consumes = MediaType.APPLICATION_JSON_VALUE, produces= MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<Menu>> save(
@@ -78,7 +106,7 @@ public class MenuController {
                                                             HttpServletRequest hsr){
         return  menuRepo.findById(id)
                 .map(menu -> {
-                    List<String> imageUrls = s3Storage.upload(pictures);
+                    List<String> imageUrls = storageService.upload(pictures);
                     Dish dish = convertDtoToModel(dishDto);
 
                     dish.setId(UUID.randomUUID().toString());
@@ -95,18 +123,6 @@ public class MenuController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
-    @GetMapping(value="/", produces= MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseWrapper<List<Menu>>> get(
-
-            @RequestParam(required = false) String restaurantId,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String dietType,
-            HttpServletRequest hsr) {
-        return ResponseEntity.ok(
-                ResponseWrapper.ok(
-                        "all menus",hsr.getRequestURI(),menuService.loadFilteredMenus(restaurantId,name,dietType)));
-    }
 
     /*@DeleteMapping("/{id}")
     public ResponseEntity<ResponseWrapper<String>> deleteMenu(@PathVariable String id,HttpServletRequest hsr) {

@@ -15,12 +15,12 @@ public abstract class MenuItem {
 
     @Id
     private String id;
-
+    private String itemType;
     private String canteenId;
-    private String name;
+    private String itemName;
     private String desc;
     private BigDecimal price;
-    private List<String> imageUrls = new ArrayList<>();
-    private Approval approval;
+    private List<String> pictures = new ArrayList<>();
+    private String userId;
 }
 
