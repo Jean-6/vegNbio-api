@@ -1,19 +1,15 @@
-package org.example.vegnbioapi.model;
+package org.example.vegnbioapi.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
+import org.example.vegnbioapi.model.Approval;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.time.LocalDateTime;
+
 
 @Data
-@Document
-public class Offer {
-    @Id
-    private String id;
+public class ProductDto {
     private String type;
     private String name;
     private String desc;
@@ -22,10 +18,11 @@ public class Offer {
     private String unit;
     private double unitPrice;
     private String origin;
-    List<String> pictures;
     @JsonFormat(pattern = "dd-MM-yyyy")
     private LocalDate availabilityDate;
     @JsonFormat(pattern = "dd-MM-yyyy")
     private LocalDate expirationDate;
-    private String supplierId;
+    private UserInfo user;
+    private Approval approval;
+    private LocalDateTime createdAt;
 }

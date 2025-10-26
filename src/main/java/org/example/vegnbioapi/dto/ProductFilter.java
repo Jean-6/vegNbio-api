@@ -4,7 +4,7 @@ package org.example.vegnbioapi.dto;
 import lombok.Data;
 
 @Data
-public class OfferFilter {
+public class ProductFilter {
     private String type;
     private String name;
     private String category;
