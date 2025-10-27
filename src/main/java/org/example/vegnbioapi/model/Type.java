@@ -1,6 +1,6 @@
 package org.example.vegnbioapi.model;
 
-public enum DishType {
+public enum Type {
     APPETIZER,
     MEAL,
     DESSERT

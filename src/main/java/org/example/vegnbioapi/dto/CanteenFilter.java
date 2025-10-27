@@ -1,27 +1,23 @@
 package org.example.vegnbioapi.dto;
 
 import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat;
-
-import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Data
 public class CanteenFilter {
 
-    private String canteenName;
-    private String dishName;
+    private String name;
+    private List<String> cities;
+    private List<String> services;
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime startDate;
-
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime endDate;
-
-    private Integer capacity;
-    private Boolean hasWifi;
-    private Boolean hasPrinter;
+    //@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    //private LocalDateTime startDate;
+    //@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    //private LocalDateTime endDate;
     private Boolean hasConferenceRoom;
-
-    // Getters and setters (ou utiliser Lombok avec @Data)
+    private Boolean hasMeal;
+    private Boolean hasAnimation;
+    private Boolean hasMeditation;
+    private List<String> status;
 }

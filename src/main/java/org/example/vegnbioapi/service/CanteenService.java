@@ -18,6 +18,6 @@ public interface CanteenService {
     List<Canteen> loadFilteredCanteens(CanteenFilter filters);
     Canteen loadById(String id);
     Canteen delete(String id);
-    Canteen approveOrRejectCanteen(String canteenId, ApprovalRequest request) ;
+    Canteen approveOrRejectCanteen(String canteenId, Approval request) ;
 
 }

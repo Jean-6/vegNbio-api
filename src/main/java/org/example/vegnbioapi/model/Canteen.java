@@ -17,7 +17,8 @@ public class Canteen {
     private String id;
     private String name;
     private String desc;
-    private List<String> equipments;
+    private List<String> equipments; //Animation,conférence,Meditation"
+
     private int meetingRooms;
     private Map<String, OpeningHours> openingHoursMap = new HashMap<>();
     private Location location;

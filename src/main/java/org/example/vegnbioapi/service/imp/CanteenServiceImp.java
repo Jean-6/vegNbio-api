@@ -2,9 +2,8 @@ package org.example.vegnbioapi.service.imp;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.AddCanteen;
-import org.example.vegnbioapi.dto.ApprovalRequest;
+import org.example.vegnbioapi.dto.Approval;
 import org.example.vegnbioapi.dto.CanteenFilter;
-import org.example.vegnbioapi.model.Approval;
 import org.example.vegnbioapi.model.Canteen;
 import org.example.vegnbioapi.model.Status;
 import org.example.vegnbioapi.model.User;
@@ -14,8 +13,6 @@ import org.example.vegnbioapi.service.CanteenService;
 import org.example.vegnbioapi.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -24,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,13 +57,13 @@ public class CanteenServiceImp implements CanteenService {
         canteen.setTags(canteenDto.getTags());
         canteen.setUserId(canteenDto.getUserId());
 
-        Approval app= new Approval();
+        org.example.vegnbioapi.model.Approval app= new org.example.vegnbioapi.model.Approval();
         app.setStatus(Status.PENDING);
         canteen.setApproval(app);
         canteen.setApproval(app);
 
         canteen.setCreatedAt(LocalDateTime.now());
-        List<String> picturesUrl = this.storageService.savePictures(pictures);
+        List<String> picturesUrl = this.storageService.uploadPictures("canteen",pictures);
         canteen.setPictures(picturesUrl);
         return canteenRepo.save(canteen);
     }
@@ -90,7 +86,6 @@ public class CanteenServiceImp implements CanteenService {
     @Override
     public List<Canteen> getCanteenForCurrentUser(Principal principal, CanteenFilter filters) {
 
-
         User user = userRepo.findUserByUsername(principal.getName())
                 .orElseThrow(()-> new ResourceNotFoundException("User not found with name:"+ principal.getName()));
 
@@ -98,12 +93,23 @@ public class CanteenServiceImp implements CanteenService {
 
         criteria.and("userId").is(user.getId());
 
-        if (filters.getCanteenName() != null && !filters.getCanteenName().isEmpty()) criteria.and("name").regex(filters.getCanteenName(), "i");
-        if (filters.getCity() != null && !filters.getCity().isEmpty()) criteria.and("canteenId").is(filters.getCity());
+        if (filters.getName() != null && !filters.getName().isEmpty()) {
+            criteria.and("name").regex(filters.getName(), "i");
+        }
 
+        if (filters.getCities() != null && !filters.getCities().isEmpty()) {
+            criteria.and("location.city").in(filters.getCities());
+        }
+
+        if (filters.getServices() != null && !filters.getServices().isEmpty()) {
+            criteria.and("equipments").in(filters.getServices());
+        }
+
+        if (filters.getStatus() != null && !filters.getStatus().isEmpty()) {
+            criteria.and("approval.status").in(filters.getStatus());
+        }
         Query query = new Query(criteria);
         return mongoTemplate.find(query, Canteen.class);
-
     }
 
 
@@ -111,24 +117,25 @@ public class CanteenServiceImp implements CanteenService {
     @Override
     public List<Canteen> loadFilteredCanteens(CanteenFilter filters) {
 
-       List<AggregationOperation> pipeline = new ArrayList<>();
+        Criteria criteria = new Criteria();
 
-       pipeline.add(Aggregation.lookup("menu","menuIds","_id","menu"));
+        if (filters.getName() != null && !filters.getName().isEmpty()) {
+            criteria.and("name").regex(filters.getName(), "i");
+        }
 
-       pipeline.add(Aggregation.unwind("menu",true));
+        if (filters.getCities() != null && !filters.getCities().isEmpty()) {
+            criteria.and("location.city").in(filters.getCities());
+        }
 
-       pipeline.add(Aggregation.unwind("menu.dishes", true));
+        if (filters.getServices() != null && !filters.getServices().isEmpty()) {
+            criteria.and("equipments").in(filters.getServices());
+        }
 
-       List<Criteria> criteriaList = new ArrayList<>();
-
-       if(filters.getCanteenName() != null && !filters.getCanteenName().isEmpty()){
-           criteriaList.add(Criteria.where("name").regex(filters.getCanteenName(),"i"));
-       }
-
-        Aggregation aggregation = Aggregation.newAggregation(pipeline);
-        return  mongoTemplate.aggregate(aggregation,"canteen",Canteen.class).getMappedResults();
-
-
+        if (filters.getStatus() != null && !filters.getStatus().isEmpty()) {
+            criteria.and("approval.status").in(filters.getStatus());
+        }
+        Query query = new Query(criteria);
+        return mongoTemplate.find(query, Canteen.class);
     }
 
     @Override
@@ -151,17 +158,15 @@ public class CanteenServiceImp implements CanteenService {
     }
 
     @Override
-    public Canteen approveOrRejectCanteen(String canteenId, ApprovalRequest request) {
+    public Canteen approveOrRejectCanteen(String canteenId, Approval request) {
         Canteen canteen = canteenRepo.findById(canteenId)
                 .orElseThrow(() -> new ResourceNotFoundException("Canteen not found with : " + canteenId));
 
-        Approval approval = new Approval();
+        org.example.vegnbioapi.model.Approval approval = new org.example.vegnbioapi.model.Approval();
         approval.setStatus(request.getStatus());
         approval.setReasons(request.getReasons());
         approval.setDate(LocalDateTime.now());
-
         canteen.setApproval(approval);
-
         return canteenRepo.save(canteen);
     }
 

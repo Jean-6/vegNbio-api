@@ -100,11 +100,12 @@ public class CanteenController {
 
 
     @PutMapping("/approve/{id}")
-    public ResponseEntity<Canteen> approveOrRejectCanteen(
+    public ResponseEntity<ResponseWrapper<Canteen>> approveOrRejectCanteen(
             @PathVariable String id,
-            @RequestBody ApprovalRequest request
-    ) {
+            @RequestBody Approval request,
+            HttpServletRequest hsr) {
         Canteen updated = canteenService.approveOrRejectCanteen(id, request);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(
+                ResponseWrapper.ok("Canteen approval", hsr.getRequestURI(), updated));
     }
 }
