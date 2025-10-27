@@ -27,13 +27,13 @@ public class StorageServiceImp implements StorageService {
     @Autowired
     private S3Client s3Client;
 
-    public List<String> upload(List<MultipartFile> pictures) {
+    public List<String> uploadPictures(String directory, List<MultipartFile> pictures) {
 
         List<String> pictureUrls = new ArrayList<>();
 
         for (int index = 0; index < pictures.size(); index++) {
             String filename = "img_" + index + "." + Utils.getExtension(pictures.get(index).getOriginalFilename());
-            String key = "dish/" + Utils.generateFolderName() + "/" + filename;
+            String key = directory+"/" + Utils.generateFolderName() + "/" + filename;
             try {
                 s3Client.putObject(
                         PutObjectRequest.builder()
@@ -99,6 +99,25 @@ public class StorageServiceImp implements StorageService {
         URI uri = URI.create(url);
         return uri.getPath().startsWith("/") ? uri.getPath().substring(1) : uri.getPath();
     }
+
+    /*@Override
+    public List<String> savePictures(List<MultipartFile> pictures) throws IOException {
+        List<String> imgUrls = new ArrayList<>();
+
+        for (int index = 0; index < pictures.size(); index++) {
+            String filename = "img_" + index + "." + Utils.getExtension(pictures.get(index).getOriginalFilename());
+            String key = "menuItem/" + Utils.generateFolderName() + "/" + filename;
+            s3Client.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(key)
+                            .contentType(pictures.get(index).getContentType())
+                            .build(),
+                    RequestBody.fromBytes(pictures.get(index).getBytes()));
+            imgUrls.add("https://" + bucketName + ".s3.amazonaws.com/" + key);
+        }
+        return imgUrls;
+    }*/
 
 
 }
