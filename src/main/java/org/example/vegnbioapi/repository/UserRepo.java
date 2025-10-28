@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface UserRepo extends MongoRepository<User, String> {
 
-    @Override
-    Optional<User> findById(String s);
+    Optional<User> findUserById(String s);
+    Optional<User> findUserByUsername(String username);
+
 }

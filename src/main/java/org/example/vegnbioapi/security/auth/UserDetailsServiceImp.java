@@ -26,8 +26,11 @@ public class UserDetailsServiceImp implements UserDetailsService {
         log.info(">> User Details Service ");
         User user = userRepository.findByUsername(username)
                 .orElseThrow(()-> new UsernameNotFoundException("User not found"));
-        log.debug(">> loadUserByUsername {}",  user.toString());
+        // Account checking
+        /*if (!user.isVerified()) {
+            throw new RuntimeException("Votre compte n'a pas encore été validé par un administrateur.");
+        }*/
+        log.info(">> loadUserByUsername {}",  user.toString());
         return UserDetailsImp.build(user);
-
     }
 }

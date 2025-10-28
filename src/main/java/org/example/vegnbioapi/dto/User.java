@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 
@@ -23,7 +24,8 @@ public class User {
     @NonNull
     private String password;
     private Set<Role> roles;
-    private boolean enabled = true;
+    private boolean isActive = true;
+    private LocalDateTime createdAt;
 
     // Getters, Setters, Constructors
 }
