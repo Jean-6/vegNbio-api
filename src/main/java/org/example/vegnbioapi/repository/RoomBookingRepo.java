@@ -11,4 +11,6 @@ import java.util.List;
 @Repository
 public interface RoomBookingRepo extends MongoRepository<RoomBooking, String> {
     List<RoomBooking> findByUserId(String userId);
+    //List<RoomBooking> findRoomBookingByCanteenId(String id);
+    List<RoomBooking> findRoomBookingsByCanteenInfoCanteenId(String canteenId);
 }

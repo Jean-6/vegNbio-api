@@ -2,6 +2,7 @@ package org.example.vegnbioapi.model;
 
 
 import lombok.Data;
+import org.example.vegnbioapi.dto.CanteenInfo;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
@@ -13,18 +14,14 @@ import java.time.LocalTime;
 public class RoomBooking {
 
     private String id;
-    private String canteenId;
+    //private String canteenId;
     private String name;
     private Integer roomNumber;
     private LocalTime startTime;
     private LocalTime endTime;
     private LocalDate date;
-    private Status status;
-    private Integer people;
+    private Integer people = 0;
     private String userId;
-    //private Status status;
+    private CanteenInfo canteenInfo;
     private LocalDateTime createdAt;
-
-
-
 }

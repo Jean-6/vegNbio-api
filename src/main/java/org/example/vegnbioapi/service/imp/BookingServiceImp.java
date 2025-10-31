@@ -70,6 +70,111 @@ public class BookingServiceImp implements BookingService {
     }
 
     @Override
+    public List<Booking> getUserBookings(BookingFilter filters) {
+        log.info(">> Fetching all user bookings");
+        log.info(filters.toString());
+
+        String userId = filters.getUserId();
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("User ID is required to fetch user bookings");
+        }
+
+        String typeFilter = filters.getType();
+        LocalDate startDate = filters.getStartDate();
+        LocalDate endDate = filters.getEndDate();
+
+        List<Booking> userBookings = new ArrayList<>();
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
+        // --- EVENT BOOKINGS ---
+        if (typeFilter == null || typeFilter.equalsIgnoreCase("EVENT")) {
+            Query query = new Query().addCriteria(Criteria.where("userId").is(userId));
+            if (startDate != null) query.addCriteria(Criteria.where("eventDate").gte(startDate));
+            if (endDate != null) query.addCriteria(Criteria.where("eventDate").lte(endDate));
+
+            List<EventBooking> eventBookings = mongoTemplate.find(query, EventBooking.class);
+
+            for (EventBooking booking : eventBookings) {
+                Event event = eventRepo.findById(booking.getEventId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + booking.getEventId()));
+
+                Canteen canteen = canteenRepo.findById(event.getCanteenId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Canteen not found: " + event.getCanteenId()));
+
+                userBookings.add(Booking.builder()
+                        .type("EVENT")
+                        .startTime(event.getStartTime())
+                        .endTime(event.getEndTime())
+                        .date(event.getDate())
+                        .people(0)
+                        .userInfo(new UserInfo(user.getUsername(), user.getEmail()))
+                        .canteenInfo(new CanteenInfo(canteen.getId(), canteen.getName(), canteen.getLocation(), canteen.getContact()))
+                        .createdAt(booking.getCreatedAt())
+                        .build());
+            }
+        }
+
+        // --- TABLE BOOKINGS ---
+        if (typeFilter == null || typeFilter.equalsIgnoreCase("TABLE")) {
+            Query query = new Query().addCriteria(Criteria.where("userId").is(userId));
+            if (startDate != null) query.addCriteria(Criteria.where("date").gte(startDate));
+            if (endDate != null) query.addCriteria(Criteria.where("date").lte(endDate));
+
+            List<TableBooking> tableBookings = mongoTemplate.find(query, TableBooking.class);
+
+            for (TableBooking booking : tableBookings) {
+                Canteen canteen = canteenRepo.findById(booking.getCanteenInfo().getCanteenId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Canteen not found: " + booking.getCanteenInfo().getCanteenId()));
+
+                userBookings.add(Booking.builder()
+                        .type("TABLE")
+                        .startTime(booking.getStartTime())
+                        .date(booking.getDate())
+                        .people(booking.getPeople())
+                        .userInfo(new UserInfo(user.getUsername(), user.getEmail()))
+                        .canteenInfo(new CanteenInfo(canteen.getId(), canteen.getName(), canteen.getLocation(), canteen.getContact()))
+                        .createdAt(booking.getCreatedAt())
+                        .build());
+            }
+        }
+
+        // --- ROOM BOOKINGS ---
+        if (typeFilter == null || typeFilter.equalsIgnoreCase("ROOM")) {
+            Query query = new Query().addCriteria(Criteria.where("userId").is(userId));
+            if (startDate != null) query.addCriteria(Criteria.where("date").gte(startDate));
+            if (endDate != null) query.addCriteria(Criteria.where("date").lte(endDate));
+
+            List<RoomBooking> roomBookings = mongoTemplate.find(query, RoomBooking.class);
+
+            for (RoomBooking booking : roomBookings) {
+                Canteen canteen = canteenRepo.findById(booking.getCanteenInfo().getCanteenId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Canteen not found: " + booking.getCanteenInfo().getCanteenId()));
+
+                userBookings.add(Booking.builder()
+                        .type("ROOM")
+                        .startTime(booking.getStartTime())
+                        .endTime(booking.getEndTime())
+                        .date(booking.getDate())
+                        .people(booking.getPeople() != null ? booking.getPeople() : 0)
+                        .people(booking.getPeople())
+                        .userInfo(new UserInfo(user.getUsername(), user.getEmail()))
+                        .canteenInfo(new CanteenInfo(canteen.getId(), canteen.getName(), canteen.getLocation(), canteen.getContact()))
+                        .createdAt(booking.getCreatedAt())
+                        .build());
+            }
+        }
+
+        // --- Tri par date de création décroissante ---
+        //userBookings.sort((b1, b2) -> b2.getCreatedAt().compareTo(b1.getCreatedAt()));
+
+        return userBookings;
+    }
+
+   
+
+    @Override
     public TableBooking reserveTable(TableBookingDto booking) {
 
         Canteen canteen = canteenRepo.findById(booking.getCanteenId())
@@ -81,23 +186,23 @@ public class BookingServiceImp implements BookingService {
                 booking.getStartTime()
         );
 
-        int seatBooked = conflicts.stream()
+        /*int seatBooked = conflicts.stream()
                 .mapToInt(b -> b.getPeople() == null ? 0 : b.getPeople())
-                .sum();
-
-        int requested = booking.getPeople() == null ? 0 : booking.getPeople();
-        if (seatBooked + requested > canteen.getSeats()) {
-            throw new RuntimeException("insufficient places ");
-        }
+                .sum();*/
 
         TableBooking newBooking = new TableBooking();
-        newBooking.setCanteenId(booking.getCanteenId());
-        //newBooking.setName(booking.getName());
+
+        CanteenInfo canteenInfo = new CanteenInfo();
+        canteenInfo.setCanteenId(canteen.getId());
+        canteenInfo.setName(canteen.getName());
+        canteenInfo.setLocation(canteen.getLocation());
+        canteenInfo.setContact(canteen.getContact());
+
+        newBooking.setCanteenInfo(canteenInfo);
         newBooking.setStartTime(booking.getStartTime());
         newBooking.setDate(booking.getDate());
         newBooking.setPeople(booking.getPeople());
-        //newBooking.setStatus();
-        //newBooking.setUserId(booking.getUserId());
+        newBooking.setUserId(booking.getUserId());
         newBooking.setCreatedAt(LocalDateTime.now());
 
         return tableBookingRepo.save(newBooking);
@@ -106,6 +211,7 @@ public class BookingServiceImp implements BookingService {
 
     @Override
     public RoomBooking reserveRoom(RoomBookingDto booking) {
+
 
         Canteen canteen = canteenRepo.findById(booking.getCanteenId())
                 .orElseThrow(() -> new ResourceNotFoundException("Canteen not found"));
@@ -130,13 +236,21 @@ public class BookingServiceImp implements BookingService {
         Integer roomNumber = assignRoomNumber(conflicts, canteen.getMeetingRooms());
 
         RoomBooking newBooking = new RoomBooking();
-        newBooking.setCanteenId(booking.getCanteenId());
         newBooking.setStartTime(booking.getStartTime());
         newBooking.setEndTime(booking.getEndTime());
         newBooking.setDate(booking.getDate());
         newBooking.setCreatedAt(LocalDateTime.now());
-        //newBooking.setUserId(booking.getUserId());
+        newBooking.setUserId(booking.getUserId());
         newBooking.setRoomNumber(roomNumber);
+
+        // Correctement remplir CanteenInfo depuis le canteen
+        CanteenInfo canteenInfo = new CanteenInfo();
+        canteenInfo.setCanteenId(canteen.getId());
+        canteenInfo.setName(canteen.getName());
+        canteenInfo.setLocation(canteen.getLocation());
+        canteenInfo.setContact(canteen.getContact());
+
+        newBooking.setCanteenInfo(canteenInfo);
 
         return roomBookingRepo.save(newBooking);
     }
@@ -166,97 +280,8 @@ public class BookingServiceImp implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getReservations(BookingFilter filters ) {
-
-        log.info("get all reservations");
-
-        List<BookingDto> reservations = new ArrayList<>();
-        String userId = filters.getUserId();
-
-        // --- Events ---
-        List<EventBooking> eventBookings = (userId == null || userId.isBlank())
-                ? eventBookingRepo.findAll()
-                : eventBookingRepo.findByUserId(userId);
-
-        for (EventBooking booking : eventBookings) {
-            Event event = eventRepo.findById(booking.getEventId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Event not found : " + booking.getEventId()));
-
-            Canteen canteen = canteenRepo.findById(event.getCanteenId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found : " + event.getCanteenId()));
-
-            User user = userRepo.findById(booking.getUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found : " + booking.getUserId()));
-
-            BookingDto dto = new BookingDto(
-                    "EVENT",
-                    event.getStartTime(),
-                    event.getEndTime(),
-                    event.getDate(),
-                    new UserInfo(user.getUsername(),user.getEmail()),
-                    new CanteenInfo(canteen.getName(),canteen.getLocation(),canteen.getContact()),
-                    booking.getCreatedAt()
-            );
-
-            reservations.add(dto);
-        }
-
-        // --- Réservations de tables ---
-        List<TableBooking> tableBookings = (userId == null || userId.isBlank())
-                ? tableBookingRepo.findAll()
-                : tableBookingRepo.findByUserId(userId);
-        for(TableBooking tableBooking : tableBookings){
-
-
-            Canteen canteen = canteenRepo.findById(tableBooking.getCanteenId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found : " + tableBooking.getCanteenId()));
-
-            User user = userRepo.findById(tableBooking.getUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found : " + tableBooking.getUserId()));
-
-            BookingDto dto = new BookingDto(
-                                    "TABLE",
-                                    tableBooking.getStartTime(),
-                                    tableBooking.getDate(),
-                                    tableBooking.getPeople(),
-                                    new UserInfo(user.getUsername(),user.getEmail()),
-                                    new CanteenInfo(canteen.getName(),canteen.getLocation(),canteen.getContact()),
-                                    tableBooking.getCreatedAt()
-                            );
-
-            reservations.add(dto);
-
-
-        }
-
-        // --- ROOMS ---
-        List<RoomBooking> roomBookings = (userId == null || userId.isBlank())
-                ? roomBookingRepo.findAll()
-                : roomBookingRepo.findByUserId(userId);
-        for (RoomBooking roomBooking : roomBookings) {
-
-            User user = userRepo.findById(roomBooking.getUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found : " + roomBooking.getUserId()));
-
-            Canteen canteen = canteenRepo.findById(roomBooking.getCanteenId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found : " + roomBooking.getCanteenId()));
-
-
-            roomBookingRepo.findById(roomBooking.getId()).flatMap(
-                    room -> canteenRepo.findById(room.getCanteenId())).ifPresent(canteenFounded -> {
-                reservations.add(new BookingDto(
-                        "ROOM",
-                        roomBooking.getStartTime(),
-                        roomBooking.getEndTime(),
-                        roomBooking.getDate(),
-                        new UserInfo(user.getUsername(),user.getEmail()),
-                        new CanteenInfo(canteen.getName(),canteen.getLocation(),canteen.getContact()),
-                        roomBooking.getCreatedAt()// date
-                ));
-            });
-        }
-        
-        return reservations;
+    public List<RoomBooking> getRoomBookingsByCanteen(String canteenId) {
+        return roomBookingRepo.findRoomBookingsByCanteenInfoCanteenId(canteenId);
     }
 
 

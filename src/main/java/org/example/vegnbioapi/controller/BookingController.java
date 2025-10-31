@@ -28,12 +28,22 @@ public class BookingController {
     private BookingService bookingService;
 
 
-    @GetMapping(value = "/", produces = MediaType.APPLICATION_JSON_VALUE)
+    /*@GetMapping(value = "/", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<List<BookingDto>>> get(
             @Validated @ModelAttribute BookingFilter filters,
             HttpServletRequest request) {
         log.info(">> Load all reservations");
         List<BookingDto> reservations = bookingService.getReservations(filters);
+        return ResponseEntity.ok(
+                ResponseWrapper.ok("Reservation list", request.getRequestURI(), reservations));
+    }*/
+
+    @GetMapping(value = "/user", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseWrapper<List<Booking>>> getUserBookings(
+            @Validated @ModelAttribute BookingFilter filters,
+            HttpServletRequest request) {
+        log.info(">> Load user bookings");
+        List<Booking> reservations = bookingService.getUserBookings(filters);
         return ResponseEntity.ok(
                 ResponseWrapper.ok("Reservation list", request.getRequestURI(), reservations));
     }
@@ -69,6 +79,22 @@ public class BookingController {
         EventBooking booking =  bookingService.reserveEvent(eventBooking);
         return ResponseEntity.ok(
                 ResponseWrapper.ok("Reservation of event saved", request.getRequestURI(), booking));
+    }
+
+    @GetMapping("/room")
+    public ResponseEntity<ResponseWrapper<List<RoomBooking>>> getRoomBookings(
+            @RequestParam String canteenId,
+            HttpServletRequest hsr) {
+
+        log.info(">> Room bookings for canteen Id "+canteenId);
+
+        List<RoomBooking> bookings = bookingService.getRoomBookingsByCanteen(canteenId);
+
+        return ResponseEntity.ok(
+                ResponseWrapper.ok(
+                        "Liste des réservations de salle récupérée avec succès",
+                        hsr.getRequestURI(),
+                        bookings));
     }
 
 

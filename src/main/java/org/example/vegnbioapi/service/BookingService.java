@@ -9,8 +9,11 @@ import java.util.List;
 
 public interface BookingService {
 
+
+    List<Booking> getUserBookings(BookingFilter filters) ;
     TableBooking reserveTable(TableBookingDto booking) ;
     RoomBooking reserveRoom(RoomBookingDto booking) ;
     EventBooking reserveEvent(AddEventBooking eventbooking) ;
-    List<BookingDto> getReservations(BookingFilter filters);
+    //List<BookingDto> getReservations(BookingFilter filters);
+    List<RoomBooking> getRoomBookingsByCanteen(String canteenId);
 }

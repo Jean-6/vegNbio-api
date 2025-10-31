@@ -13,6 +13,6 @@ public class TableBookingDto {
     private LocalTime startTime;
     private LocalDate date;
     private Integer people;
-    private UserInfo user;
-    private CanteenInfo canteen;
+    private String userId;
+    //private CanteenInfo canteen;
 }
