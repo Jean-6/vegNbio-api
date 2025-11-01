@@ -9,4 +9,6 @@ import java.util.List;
 
 
 @Repository
-public interface CanteenRepo extends MongoRepository<Canteen, String> { }
+public interface CanteenRepo extends MongoRepository<Canteen, String> {
+    List<Canteen> findCanteenByUserId(String uid);
+}

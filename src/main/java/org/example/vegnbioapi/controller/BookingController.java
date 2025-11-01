@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 
@@ -28,15 +29,16 @@ public class BookingController {
     private BookingService bookingService;
 
 
-    /*@GetMapping(value = "/", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseWrapper<List<BookingDto>>> get(
+    @GetMapping(value = "/restorer", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseWrapper<List<BookingView>>> get(
+            Principal principal,
             @Validated @ModelAttribute BookingFilter filters,
-            HttpServletRequest request) {
-        log.info(">> Load all reservations");
-        List<BookingDto> reservations = bookingService.getReservations(filters);
+            HttpServletRequest hsr) {
+        log.info(">> Load restorer bookings");
+        List<BookingView> reservations = bookingService.getRestorerBookings(principal,filters);
         return ResponseEntity.ok(
-                ResponseWrapper.ok("Reservation list", request.getRequestURI(), reservations));
-    }*/
+                ResponseWrapper.ok("Restorer bookings ", hsr.getRequestURI(), reservations));
+    }
 
     @GetMapping(value = "/user", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<List<Booking>>> getUserBookings(

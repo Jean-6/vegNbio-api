@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -67,6 +68,108 @@ public class BookingServiceImp implements BookingService {
         Query query = new Query(criteria);
         return mongoTemplate.find(query, TableBooking.class);
 
+    }
+
+    @Override
+    public List<BookingView> getRestorerBookings(Principal principal, BookingFilter filters) {
+        User restorer = userRepo.findUserByUsername(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé : " + principal.getName()));
+
+        List<Canteen> canteens = canteenRepo.findCanteenByUserId(restorer.getId());
+        if (canteens.isEmpty()) return List.of();
+
+        List<String> canteenIds = canteens.stream().map(Canteen::getId).toList();
+        List<BookingView> allBookings = new ArrayList<>();
+
+        // --- TABLE BOOKINGS ---
+        List<TableBooking> tableBookings = mongoTemplate.find(
+                Query.query(Criteria.where("canteenInfo.canteenId").in(canteenIds)
+                        .andOperator(
+                                filters.getStartDate() != null ? Criteria.where("date").gte(filters.getStartDate()) : new Criteria(),
+                                filters.getEndDate() != null ? Criteria.where("date").lte(filters.getEndDate()) : new Criteria()
+                        )
+                ), TableBooking.class
+        );
+
+        for (TableBooking t : tableBookings) {
+            User bookingUser = userRepo.findById(t.getUserId()).orElse(null);
+            allBookings.add(BookingView.builder()
+                    .id(t.getId())
+                    .type("TABLE")
+                    .canteenInfo(t.getCanteenInfo())
+                    .userInfo(bookingUser != null ? new UserInfo(bookingUser.getUsername(), bookingUser.getEmail()) : null)
+                    .date(t.getDate())
+                    .startTime(t.getStartTime())
+                    .people(t.getPeople())
+                    .createdAt(t.getCreatedAt())
+                    .build()
+            );
+        }
+
+        // --- ROOM BOOKINGS ---
+        List<RoomBooking> roomBookings = mongoTemplate.find(
+                Query.query(Criteria.where("canteenInfo.canteenId").in(canteenIds)
+                        .andOperator(
+                                filters.getStartDate() != null ? Criteria.where("date").gte(filters.getStartDate()) : new Criteria(),
+                                filters.getEndDate() != null ? Criteria.where("date").lte(filters.getEndDate()) : new Criteria()
+                        )
+                ), RoomBooking.class
+        );
+
+        for (RoomBooking r : roomBookings) {
+            User bookingUser = userRepo.findById(r.getUserId()).orElse(null);
+            allBookings.add(BookingView.builder()
+                    .id(r.getId())
+                    .type("ROOM")
+                    .canteenInfo(r.getCanteenInfo())
+                    .userInfo(bookingUser != null ? new UserInfo(bookingUser.getUsername(), bookingUser.getEmail()) : null)
+                    .date(r.getDate())
+                    .startTime(r.getStartTime())
+                    .endTime(r.getEndTime())
+                    .people(r.getPeople())
+                    .createdAt(r.getCreatedAt())
+                    .build()
+            );
+        }
+
+        // --- EVENT BOOKINGS ---
+        List<EventBooking> eventBookings = mongoTemplate.findAll(EventBooking.class);
+        for (EventBooking e : eventBookings) {
+            // 1️⃣ Récupère l'utilisateur qui a réservé
+            User bookingUser = userRepo.findById(e.getUserId()).orElse(null);
+
+            // 2️⃣ Récupère l'événement pour avoir la date et les horaires
+            Event event = eventRepo.findById(e.getEventId()).orElse(null);
+
+            // 3️⃣ Récupère la cantine de l'événement si disponible
+            CanteenInfo eventCanteenInfo = null;
+            if (event != null && event.getCanteenId() != null) {
+                Canteen canteen = canteenRepo.findById(event.getCanteenId()).orElse(null);
+                if (canteen != null) {
+                    eventCanteenInfo = new CanteenInfo(
+                            canteen.getId(),
+                            canteen.getName(),
+                            canteen.getLocation(),
+                            canteen.getContact()
+                    );
+                }
+            }
+
+            // 4️⃣ Ajoute la réservation dans la liste
+            allBookings.add(BookingView.builder()
+                    .id(e.getId())
+                    .type("EVENT")
+                    .userInfo(bookingUser != null ? new UserInfo(bookingUser.getUsername(), bookingUser.getEmail()) : null)
+                    .canteenInfo(eventCanteenInfo)
+                    .date(event != null && event.getDate() != null ? event.getDate() : null)
+                    .startTime(event != null && event.getStartTime() != null ? event.getStartTime() : null)
+                    .endTime(event != null && event.getEndTime() != null ? event.getEndTime() : null)     // HH:mm
+                    .createdAt(e.getCreatedAt() != null ? e.getCreatedAt() : null)
+                    .build()
+            );
+        }
+
+        return allBookings;
     }
 
 
