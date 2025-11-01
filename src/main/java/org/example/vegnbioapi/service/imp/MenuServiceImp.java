@@ -75,19 +75,48 @@ public class MenuServiceImp implements MenuService {
     }
 
     @Override
-    public List<MenuItem> getItemsMenu( ItemMenuFilter filters) {
+    public List<MenuItem> getItemsMenu(ItemMenuFilter filters) {
+        log.info("Applying filters: {}", filters);
 
-        Criteria criteria = new Criteria();
+        List<Criteria> criteriaList = new ArrayList<>();
 
-        if (filters.getItemType() != null && !filters.getItemType().isEmpty()) criteria.and("itemType").regex(filters.getItemType(), "i");
-        if (filters.getCanteenId() != null && !filters.getCanteenId().isEmpty()) criteria.and("canteenId").is(filters.getCanteenId());
-        if (filters.getItemName() != null && !filters.getItemName().isEmpty()) criteria.and("itemName").regex(filters.getItemName(),"i");
-        if (filters.getMinPrice() != null) criteria.and("price").gte(filters.getMinPrice());
-        if (filters.getMaxPrice() != null) criteria.and("price").lte(filters.getMaxPrice());
+        // Gestion des différents filtres dynamiques
+        if (filters.getItemType() != null && !filters.getItemType().isEmpty()) {
+            criteriaList.add(Criteria.where("itemType").regex(filters.getItemType(), "i"));
+        }
 
-        Query query = new Query(criteria);
+        if (filters.getCanteenId() != null && !filters.getCanteenId().isEmpty()) {
+            criteriaList.add(Criteria.where("canteenId").is(filters.getCanteenId()));
+        }
+
+        if (filters.getItemName() != null && !filters.getItemName().isEmpty()) {
+            criteriaList.add(Criteria.where("itemName").regex(filters.getItemName(), "i"));
+        }
+
+        // Prix minimum et maximum sur le même champ sans écrasement
+        if (filters.getMinPrice() != null || filters.getMaxPrice() != null) {
+            Criteria priceCriteria = Criteria.where("price");
+            if (filters.getMinPrice() != null) {
+                priceCriteria = priceCriteria.gte(filters.getMinPrice());
+            }
+            if (filters.getMaxPrice() != null) {
+                priceCriteria = priceCriteria.lte(filters.getMaxPrice());
+            }
+            criteriaList.add(priceCriteria);
+        }
+
+        // Combine tous les critères avec AND
+        Criteria finalCriteria = new Criteria();
+        if (!criteriaList.isEmpty()) {
+            finalCriteria.andOperator(criteriaList.toArray(new Criteria[0]));
+        }
+
+        Query query = new Query(finalCriteria);
+        log.info("Mongo query: {}", query);
+
         return mongoTemplate.find(query, MenuItem.class);
     }
+
 
     @Override
     public MenuItem saveMenuItem(Principal principal, AddMenuItem dto,List<MultipartFile> pictures) throws IOException {

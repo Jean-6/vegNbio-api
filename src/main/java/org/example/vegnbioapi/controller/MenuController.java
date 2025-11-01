@@ -6,22 +6,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.*;
 import org.example.vegnbioapi.model.Dish;
-import org.example.vegnbioapi.model.Menu;
 import org.example.vegnbioapi.model.MenuItem;
-import org.example.vegnbioapi.repository.MenuRepo;
 import org.example.vegnbioapi.service.MenuService;
-import org.example.vegnbioapi.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,10 +26,6 @@ public class MenuController {
 
     @Autowired
     private MenuService menuService;
-    @Autowired
-    private MenuRepo menuRepo;
-    @Autowired
-    private StorageService storageService;
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -53,7 +43,6 @@ public class MenuController {
             HttpServletRequest hsr) {
 
         log.info(">> Load all items menu for current user");
-
         List<MenuItem> items = menuService.getItemMenuForCurrentUser(principal,filters);
         return ResponseEntity.ok(
                 ResponseWrapper.ok("Items menu loaded", hsr.getRequestURI(), items));
@@ -63,10 +52,10 @@ public class MenuController {
     public ResponseEntity<ResponseWrapper<List<MenuItem>>> get(
             @ModelAttribute ItemMenuFilter filters,
             HttpServletRequest hsr) {
-
+        List<MenuItem> items = menuService.getItemsMenu(filters);
         return ResponseEntity.ok(
                 ResponseWrapper.ok(
-                        "Items menu loaded",hsr.getRequestURI(),menuService.getItemsMenu(filters)));
+                        "Items menu loaded",hsr.getRequestURI(),items));
     }
 
 
@@ -99,14 +88,14 @@ public class MenuController {
                     ResponseWrapper.ok("menu saved", request.getRequestURI(), newMenu));
     }*/
 
-    @PatchMapping(value="/{id}/dishes", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    /*@PatchMapping(value="/{id}/dishes", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<Menu>> updateMenu(@PathVariable String id,
                                                             @RequestPart("dish") DishDto dishDto,
                                                             @RequestPart("pictures") List<MultipartFile> pictures,
                                                             HttpServletRequest hsr){
         return  menuRepo.findById(id)
                 .map(menu -> {
-                    List<String> imageUrls = storageService.upload(pictures);
+                    List<String> imageUrls = storageService.uploadPictures("menu",pictures);
                     Dish dish = convertDtoToModel(dishDto);
 
                     dish.setId(UUID.randomUUID().toString());
@@ -121,7 +110,7 @@ public class MenuController {
                             ResponseWrapper.ok("menu updated",hsr.getRequestURI(),menuRepo.save(menu)));
                 })
                 .orElse(ResponseEntity.notFound().build());
-    }
+    }*/
 
 
     /*@DeleteMapping("/{id}")
