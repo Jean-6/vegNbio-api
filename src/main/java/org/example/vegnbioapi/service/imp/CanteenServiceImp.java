@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,6 +67,36 @@ public class CanteenServiceImp implements CanteenService {
         List<String> picturesUrl = this.storageService.uploadPictures("canteen",pictures);
         canteen.setPictures(picturesUrl);
         return canteenRepo.save(canteen);
+    }
+
+    @Override
+    public List<Canteen> getApprovedCanteens(CanteenFilter filters) { //Flutter
+        Criteria criteria = new Criteria();
+
+        log.info("filters : "+filters.toString());
+
+        criteria.and("approval.status").is(Status.APPROVED);
+
+        if (filters.getName() != null && !filters.getName().isEmpty()) {
+            criteria.and("name").regex(filters.getName(), "i");
+        }
+
+        List<String> specificEquipments = new ArrayList<>();
+        if (Boolean.TRUE.equals(filters.getHasAnimation())) {
+            specificEquipments.add("Animation");
+        }
+        if (Boolean.TRUE.equals(filters.getHasConferenceRoom())) {
+            specificEquipments.add("MeetingRoom");
+        }
+        if (Boolean.TRUE.equals(filters.getHasMeditation())) {
+            specificEquipments.add("Espace de méditation");
+        }
+        if (!specificEquipments.isEmpty()) {
+            criteria.and("equipments").in(specificEquipments);
+        }
+
+        Query query = new Query(criteria);
+        return mongoTemplate.find(query, Canteen.class);
     }
 
     @Override

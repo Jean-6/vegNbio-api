@@ -73,6 +73,18 @@ public class CanteenController {
                 ResponseWrapper.ok("Canteen list", request.getRequestURI(), canteens));
     }
 
+
+    @GetMapping(value="/all/approved" ,produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseWrapper<List<Canteen>>> getApprovedCanteens(
+            @ModelAttribute CanteenFilter filters,
+            HttpServletRequest hsr) {
+        log.info(">> Load all canteens approved ");
+        List<Canteen> approvedCanteens = canteenService.getApprovedCanteens(filters);
+        return ResponseEntity.ok(
+                ResponseWrapper.ok("Canteen list", hsr.getRequestURI(), approvedCanteens));
+    }
+
+
     @PostMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<Canteen>> save(
             @RequestPart("data") AddCanteen canteenDto,
@@ -106,6 +118,6 @@ public class CanteenController {
             HttpServletRequest hsr) {
         Canteen updated = canteenService.approveOrRejectCanteen(id, request);
         return ResponseEntity.ok(
-                ResponseWrapper.ok("Canteen approval", hsr.getRequestURI(), updated));
+                ResponseWrapper.ok("Canteen approved", hsr.getRequestURI(), updated));
     }
 }

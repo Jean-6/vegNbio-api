@@ -13,6 +13,7 @@ import java.util.List;
 public interface CanteenService {
 
     Canteen saveCanteen(AddCanteen canteenDto, List<MultipartFile> pictures) throws IOException;
+    List<Canteen> getApprovedCanteens(CanteenFilter filters);
     List<Canteen> getApprovedCanteensForCurrentUser(Principal principal);
     List<Canteen> getCanteenForCurrentUser(Principal principal, CanteenFilter filters);
     List<Canteen> loadFilteredCanteens(CanteenFilter filters);
