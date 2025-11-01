@@ -69,6 +69,7 @@ public class BookingServiceImp implements BookingService {
 
     }
 
+
     @Override
     public List<Booking> getUserBookings(BookingFilter filters) {
         log.info(">> Fetching all user bookings");
@@ -83,13 +84,16 @@ public class BookingServiceImp implements BookingService {
         LocalDate startDate = filters.getStartDate();
         LocalDate endDate = filters.getEndDate();
 
+        // Normaliser le type : null ou vide = tous types
+        String typeFilterNormalized = typeFilter != null ? typeFilter.trim().toUpperCase() : "";
+
         List<Booking> userBookings = new ArrayList<>();
 
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
 
         // --- EVENT BOOKINGS ---
-        if (typeFilter == null || typeFilter.equalsIgnoreCase("EVENT")) {
+        if (typeFilterNormalized.isEmpty() || typeFilterNormalized.equals("EVENEMENT")) {
             Query query = new Query().addCriteria(Criteria.where("userId").is(userId));
             if (startDate != null) query.addCriteria(Criteria.where("eventDate").gte(startDate));
             if (endDate != null) query.addCriteria(Criteria.where("eventDate").lte(endDate));
@@ -117,7 +121,7 @@ public class BookingServiceImp implements BookingService {
         }
 
         // --- TABLE BOOKINGS ---
-        if (typeFilter == null || typeFilter.equalsIgnoreCase("TABLE")) {
+        if (typeFilterNormalized.isEmpty() || typeFilterNormalized.equals("TABLE")) {
             Query query = new Query().addCriteria(Criteria.where("userId").is(userId));
             if (startDate != null) query.addCriteria(Criteria.where("date").gte(startDate));
             if (endDate != null) query.addCriteria(Criteria.where("date").lte(endDate));
@@ -141,7 +145,7 @@ public class BookingServiceImp implements BookingService {
         }
 
         // --- ROOM BOOKINGS ---
-        if (typeFilter == null || typeFilter.equalsIgnoreCase("ROOM")) {
+        if (typeFilterNormalized.isEmpty() || typeFilterNormalized.equals("SALLE")) {
             Query query = new Query().addCriteria(Criteria.where("userId").is(userId));
             if (startDate != null) query.addCriteria(Criteria.where("date").gte(startDate));
             if (endDate != null) query.addCriteria(Criteria.where("date").lte(endDate));
@@ -158,7 +162,6 @@ public class BookingServiceImp implements BookingService {
                         .endTime(booking.getEndTime())
                         .date(booking.getDate())
                         .people(booking.getPeople() != null ? booking.getPeople() : 0)
-                        .people(booking.getPeople())
                         .userInfo(new UserInfo(user.getUsername(), user.getEmail()))
                         .canteenInfo(new CanteenInfo(canteen.getId(), canteen.getName(), canteen.getLocation(), canteen.getContact()))
                         .createdAt(booking.getCreatedAt())
@@ -167,12 +170,13 @@ public class BookingServiceImp implements BookingService {
         }
 
         // --- Tri par date de création décroissante ---
-        //userBookings.sort((b1, b2) -> b2.getCreatedAt().compareTo(b1.getCreatedAt()));
+        userBookings.sort((b1, b2) -> b2.getCreatedAt().compareTo(b1.getCreatedAt()));
 
         return userBookings;
     }
 
-   
+
+
 
     @Override
     public TableBooking reserveTable(TableBookingDto booking) {
