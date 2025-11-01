@@ -77,10 +77,11 @@ public class EventServiceImp implements EventService {
 
     @Override
     public List<EventDto> getApprovedEvents(EventFilter filters) {
+
+        log.info("Filters: {}", filters);
+
         Criteria criteria = new Criteria();
         criteria.and("approval.status").is(Status.APPROVED);
-
-        log.info("filters : {}", filters);
 
         // 🔹 Filtrer par canteenId
         if (filters.getCanteenId() != null && !filters.getCanteenId().isEmpty()) {
@@ -92,12 +93,12 @@ public class EventServiceImp implements EventService {
             criteria.and("type").is(filters.getType());
         }
 
-        // 🔹 Filtrer par plage de dates
-        if (filters.getStartDate() != null) {
-            criteria.and("date").gte(filters.getStartDate().toLocalDate());
-        }
-        if (filters.getEndDate() != null) {
-            criteria.and("date").lte(filters.getEndDate().toLocalDate());
+        // 🔹 Filtrer par date (startDate et endDate)
+        if (filters.getStartDate() != null || filters.getEndDate() != null) {
+            Criteria dateCriteria = Criteria.where("date");
+            if (filters.getStartDate() != null) dateCriteria = dateCriteria.gte(filters.getStartDate());
+            if (filters.getEndDate() != null) dateCriteria = dateCriteria.lte(filters.getEndDate());
+            criteria = criteria.andOperator(dateCriteria);
         }
 
         Query query = new Query(criteria);
@@ -107,6 +108,7 @@ public class EventServiceImp implements EventService {
         // 🔹 Transformer les Event → EventDto
         return events.stream().map(this::convertToDto).toList();
     }
+
 
     @Override
     public List<org.example.vegnbioapi.model.Event> getEventForCurrentUser(Principal principal, EventFilter filters) {
