@@ -26,7 +26,7 @@ public class Event {
     private LocalTime startTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
     private LocalTime endTime;
-    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "yyyy-MM-dd")
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "dd-MM-yyy")
     private LocalDate date;
     private EventStatus status;
     private List<String> pictures;

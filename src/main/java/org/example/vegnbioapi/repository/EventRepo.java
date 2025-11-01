@@ -7,6 +7,4 @@ import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface EventRepo extends MongoRepository<Event, String> {
-
-}
+public interface EventRepo extends MongoRepository<Event, String> { }
