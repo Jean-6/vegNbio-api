@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface StorageService {
     List<String> uploadPdf(String userId,List<MultipartFile> files);
+    List<String> uploadPdf(String userId,String directory,List<MultipartFile> files);
     void deleteFromS3(List<String> pictureUrls);
     String extractKeyFromUrl(String url);
     List<String> uploadPictures(String directory,List<MultipartFile> pictures) throws IOException;
