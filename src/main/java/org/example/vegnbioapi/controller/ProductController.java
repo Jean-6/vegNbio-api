@@ -20,7 +20,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/offer")
+@RequestMapping("/api/product")
 public class ProductController {
 
     @Autowired
@@ -41,16 +41,16 @@ public class ProductController {
     }
 
     @GetMapping(value="/", produces= MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseWrapper<List <Product>>> getAllOffers(
+    public ResponseEntity<ResponseWrapper<List <Product>>> getAllProducts(
             @ModelAttribute ProductFilter filters,
             HttpServletRequest request) {
 
-        log.info(">> Load filtered offers  ");
-        log.debug(">> offerDto  : {}", filters);
-        log.info(">> Get all offers ");
+        log.info(">> Load filtered products  ");
+        log.debug(">> productDto  : {}", filters);
+        log.info(">> Get all products ");
         List<Product> products = productService.loadProducts(filters);
         return ResponseEntity.ok(
-                ResponseWrapper.ok("offer saved", request.getRequestURI(), products));
+                ResponseWrapper.ok("load product", request.getRequestURI(), products));
     }
 
     @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)

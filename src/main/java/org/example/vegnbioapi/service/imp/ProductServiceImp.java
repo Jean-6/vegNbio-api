@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 
 @Slf4j
@@ -67,14 +68,18 @@ public class ProductServiceImp implements ProductService {
     @Override
     public List<Product> loadProducts(ProductFilter filters) {
         Query query = new Query();
-        if(filters.getType() != null && !filters.getType().isEmpty()){
-            query.addCriteria(Criteria.where("type").in(filters.getType()));
+        log.info(filters.toString());
+        if(filters.getType() != null && filters.getType().length>0){
+            query.addCriteria(Criteria.where("type").in((Object[]) filters.getType()));
         }
         if(filters.getName() != null && !filters.getName().isEmpty() ){
-            query.addCriteria(Criteria.where("name").in(filters.getName()));
+            query.addCriteria(
+                    Criteria.where("name").regex(".*" + Pattern.quote(filters.getName()) + ".*", "i")
+            );
+
         }
-        if(filters.getCategory() != null && !filters.getCategory().isEmpty()  ){
-            query.addCriteria(Criteria.where("category").in(filters.getCategory()));
+        if(filters.getCategory() != null && filters.getCategory().length>0  ){
+            query.addCriteria(Criteria.where("category").in((Object[]) filters.getCategory()));
         }
 
         if(filters.getMinPrice() != null && !filters.getMinPrice().isNaN()  ){
