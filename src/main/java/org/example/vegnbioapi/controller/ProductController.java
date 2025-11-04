@@ -4,7 +4,6 @@ package org.example.vegnbioapi.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.AddProductDto;
-import org.example.vegnbioapi.dto.ProductDto;
 import org.example.vegnbioapi.dto.ResponseWrapper;
 import org.example.vegnbioapi.dto.ProductFilter;
 import org.example.vegnbioapi.model.Product;
@@ -42,16 +41,40 @@ public class ProductController {
 
     @GetMapping(value="/", produces= MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<List <Product>>> getAllProducts(
+            @RequestParam(required = false) String supplierId,
             @ModelAttribute ProductFilter filters,
             HttpServletRequest request) {
 
         log.info(">> Load filtered products  ");
         log.debug(">> productDto  : {}", filters);
         log.info(">> Get all products ");
-        List<Product> products = productService.loadProducts(filters);
+        List<Product> products ;
+        if (supplierId != null) {
+            log.info(">> Get products for supplier id: {}", supplierId);
+            products = productService.loadProductsBySupplierId(supplierId, filters);
+        } else {
+            log.info(">> Get all products");
+            products = productService.loadProducts(filters);
+        }
         return ResponseEntity.ok(
                 ResponseWrapper.ok("load product", request.getRequestURI(), products));
     }
+
+    @GetMapping(value = "/approved", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseWrapper<List<Product>>> getApprovedProducts(
+            @ModelAttribute ProductFilter filters,
+            HttpServletRequest request) {
+
+        log.info(">> Load approved products");
+        log.debug(">> ProductFilter: {}", filters);
+
+        List<Product> approvedProducts = productService.loadApprovedProducts(filters);
+
+        return ResponseEntity.ok(
+                ResponseWrapper.ok("Approved products loaded", request.getRequestURI(), approvedProducts)
+        );
+    }
+
 
     @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<Product>> delete(
@@ -64,5 +87,32 @@ public class ProductController {
                 ResponseWrapper.ok("Offer deleted with ID: "+id , request.getRequestURI(), product));
     }
 
+
+
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<ResponseWrapper<Product>> rejectProduct(
+            @PathVariable String id,
+            @RequestParam(required = false) String reasons,
+            HttpServletRequest request) {
+
+        Product rejectedProduct = productService.rejectProduct(id, reasons);
+
+        return ResponseEntity.ok(
+                ResponseWrapper.ok("Product rejected", request.getRequestURI(), rejectedProduct)
+        );
+    }
+
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<ResponseWrapper<Product>> approveProduct(
+            @PathVariable String id,
+            @RequestParam(required = false) String reasons,
+            HttpServletRequest request) {
+
+        Product approvedProduct = productService.approveProduct(id, reasons);
+
+        return ResponseEntity.ok(
+                ResponseWrapper.ok("Product approved", request.getRequestURI(), approvedProduct)
+        );
+    }
 
 }

@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.AddProductDto;
 import org.example.vegnbioapi.dto.ProductFilter;
 import org.example.vegnbioapi.model.Approval;
-import org.example.vegnbioapi.model.Event;
 import org.example.vegnbioapi.model.Product;
 import org.example.vegnbioapi.model.Status;
 import org.example.vegnbioapi.repository.ProductRepo;
@@ -39,6 +38,46 @@ public class ProductServiceImp implements ProductService {
 
 
     @Override
+    public List<Product> loadProductsBySupplierId(String supplierId, ProductFilter filters) {
+        Query query = new Query();
+        log.info(filters.toString());
+
+        // Filtrer par supplierId
+        if (supplierId != null && !supplierId.isEmpty()) {
+            query.addCriteria(Criteria.where("supplierId").is(supplierId));
+        }
+
+        if (filters.getType() != null && filters.getType().length > 0) {
+            query.addCriteria(Criteria.where("type").in((Object[]) filters.getType()));
+        }
+
+        if (filters.getName() != null && !filters.getName().isEmpty()) {
+            query.addCriteria(
+                    Criteria.where("name").regex(".*" + Pattern.quote(filters.getName()) + ".*", "i")
+            );
+        }
+
+        if (filters.getCategory() != null && filters.getCategory().length > 0) {
+            query.addCriteria(Criteria.where("category").in((Object[]) filters.getCategory()));
+        }
+
+        if (filters.getMinPrice() != null && !filters.getMinPrice().isNaN()) {
+            query.addCriteria(Criteria.where("minPrice").gte(filters.getMinPrice()));
+        }
+
+        if (filters.getMaxPrice() != null && !filters.getMaxPrice().isNaN()) {
+            query.addCriteria(Criteria.where("maxPrice").lte(filters.getMaxPrice()));
+        }
+
+        if (filters.getOrigin() != null && !filters.getOrigin().isEmpty()) {
+            query.addCriteria(Criteria.where("origin").in(filters.getOrigin()));
+        }
+
+        return mongoTemplate.find(query, Product.class);
+    }
+
+
+    @Override
     public Product save(AddProductDto productDto, List<MultipartFile> pictures) throws IOException {
 
         Product product = new Product();
@@ -62,6 +101,50 @@ public class ProductServiceImp implements ProductService {
         List<String> picturesUrl = this.storageService.uploadPictures("product",pictures);
         product.setPictures(picturesUrl);
         return productRepo.save(product);
+    }
+
+    public List<Product> loadApprovedProducts(ProductFilter filters) {
+        Query query = new Query();
+
+        if (filters.getType() != null && filters.getType().length > 0) {
+            query.addCriteria(Criteria.where("type").in((Object[]) filters.getType()));
+        }
+
+        if (filters.getName() != null && !filters.getName().isEmpty()) {
+            query.addCriteria(Criteria.where("name")
+                    .regex(".*" + Pattern.quote(filters.getName()) + ".*", "i"));
+        }
+
+        if (filters.getCategory() != null && filters.getCategory().length > 0) {
+            query.addCriteria(Criteria.where("category").in((Object[]) filters.getCategory()));
+        }
+
+        if (filters.getMinPrice() != null) {
+            query.addCriteria(Criteria.where("unitPrice").gte(filters.getMinPrice()));
+        }
+
+        if (filters.getMaxPrice() != null) {
+            query.addCriteria(Criteria.where("unitPrice").lte(filters.getMaxPrice()));
+        }
+
+        if (filters.getOrigin() != null && !filters.getOrigin().isEmpty()) {
+            query.addCriteria(Criteria.where("origin")
+                    .regex(".*" + Pattern.quote(filters.getOrigin()) + ".*", "i"));
+        }
+
+        query.addCriteria(Criteria.where("approval.status").is(Status.APPROVED));
+
+        if (filters.getStartDate() != null && filters.getEndDate() != null) {
+            query.addCriteria(Criteria.where("expirationDate")
+                    .gte(filters.getStartDate())
+                    .lte(filters.getEndDate()));
+        } else if (filters.getStartDate() != null) {
+            query.addCriteria(Criteria.where("expirationDate").gte(filters.getStartDate()));
+        } else if (filters.getEndDate() != null) {
+            query.addCriteria(Criteria.where("expirationDate").lte(filters.getEndDate()));
+        }
+
+        return mongoTemplate.find(query, Product.class);
     }
 
 
@@ -108,6 +191,35 @@ public class ProductServiceImp implements ProductService {
         storageService.deleteFromS3(product.getPictures());
         productRepo.deleteById(product.getId());
         return  product;
+    }
+
+
+
+    public Product approveProduct(String id, String reasons) {
+        Product product = productRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produit non trouvé : " + id));
+
+        Approval approval = new Approval();
+        approval.setStatus(Status.APPROVED);
+        approval.setReasons(reasons != null ? reasons : "Approuvé sans commentaire");
+        approval.setDate(LocalDateTime.now());
+
+        product.setApproval(approval);
+
+        return productRepo.save(product);
+    }
+    public Product rejectProduct(String id, String reasons) {
+        Product product = productRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produit non trouvé : " + id));
+
+        Approval rejection = new Approval();
+        rejection.setStatus(Status.REJECTED);
+        rejection.setReasons(reasons != null ? reasons : "Rejeté sans motif");
+        rejection.setDate(LocalDateTime.now());
+
+        product.setApproval(rejection);
+
+        return productRepo.save(product);
     }
 
 }
