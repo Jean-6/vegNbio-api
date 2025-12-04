@@ -83,7 +83,7 @@ public class StorageServiceImp implements StorageService {
 
         for (int index = 0; index < files.size(); index++) {
             String filename = "doc_" + userId + index + "." + Utils.getExtension(files.get(index).getOriginalFilename());
-            String key = directory + Utils.generateFolderName() + "/" + filename;
+            String key = directory +"/"+ Utils.generateFolderName() + "/" + filename;
             try {
                 s3Client.putObject(
                         PutObjectRequest.builder()
