@@ -47,7 +47,7 @@ public class WebSecurity {
                                 "/api/canteen/**",
                                 "/api/menu/**",
                                 "/api/booking/**",
-                                "/api/offer/**"
+                                "/api/product/**"
                         ).permitAll()
                         .requestMatchers( "/api/menu/me").authenticated()
                         .anyRequest().authenticated())
@@ -75,8 +75,11 @@ public class WebSecurity {
     @Bean
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOriginPatterns(List.of("http://localhost:4200"));
-        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        corsConfiguration.setAllowedOriginPatterns(List.of(
+                "http://localhost:4200",
+                "http://localhost:57318" // flutter app
+               ));
+        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"));
         corsConfiguration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         corsConfiguration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
