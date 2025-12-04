@@ -9,19 +9,18 @@ import java.util.List;
 @Data
 public class AddMenuItem {
 
-    private String itemType; // "drink" ou "meal"
+    private String itemType;
     private String canteenId;
-    private String name;
+    private String itemName;
     private String desc;
     private BigDecimal price;
-    private String userId;
 
-    // Champs spécifiques à Drink
+    // Drink
     private String volume;
-    private Boolean isGaseous;
-    private Boolean isAlcoholic;
+    private Boolean isGaseous = false;
+    private Boolean isAlcoholic = false;
 
-    // Champs spécifiques à Meal
+    // Meal
     private List<String> ingredients;
     private List<String> allergens;
     private String foodType;
