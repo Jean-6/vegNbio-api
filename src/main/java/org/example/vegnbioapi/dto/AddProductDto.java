@@ -19,6 +19,6 @@ public class AddProductDto {
     @JsonFormat(pattern = "dd-MM-yyyy")
     private LocalDate availabilityDate;
     @JsonFormat(pattern = "dd-MM-yyyy")
-    //private LocalDate expirationDate;
+    private LocalDate expirationDate;
     private String supplierId;
 }
