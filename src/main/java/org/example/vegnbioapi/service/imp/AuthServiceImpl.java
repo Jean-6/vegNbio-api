@@ -20,6 +20,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -39,6 +40,9 @@ public class AuthServiceImpl implements AuthService {
 
     public LoginResponse register(RegisterRequest request) {
 
+        log.info(" >> register method");
+        log.info(request.toString());
+
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new ConflictException("Email already exists");
@@ -53,35 +57,39 @@ public class AuthServiceImpl implements AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        Role defaultRole ;//= new Role(ERole.RESTORER);
 
-        if("web".equalsIgnoreCase(request.getSource())){
-            defaultRole = new Role (ERole.RESTORER);
-        }else if("mobile".equalsIgnoreCase(request.getSource())){
-            if("supplier".equalsIgnoreCase(request.getUserType())){
-                defaultRole = new Role(ERole.SUPPLIER);
-            }else if("customer".equalsIgnoreCase(request.getUserType())){
+        /*Role defaultRole ;
+        defaultRole = new Role(ERole.ADMIN);
+        user.setRoles(Set.of(defaultRole));*/
+
+        Role defaultRole ;
+
+        if ("web".equalsIgnoreCase(request.getSource())) {
+            defaultRole = new Role(ERole.RESTORER);
+        } else if ("mobile".equalsIgnoreCase(request.getSource())) {
+            if ("customer".equalsIgnoreCase(request.getUserType())) {
                 defaultRole = new Role(ERole.CUSTOMER);
-            }else {
-                throw new BadRequestException("User type required for mobile registration");
+            } else {
+                throw new BadRequestException("Only 'customer' user type is allowed for mobile registration");
             }
-        }
-        else {
+        } else {
             throw new BadRequestException("Invalid registration source");
         }
 
         user.setRoles(Set.of(defaultRole));
+        //user.setVerified(false);
+        user.setCreatedAt(LocalDateTime.now());
 
         userRepository.save(user);
         UserDetails userDetails = UserDetailsImp.build(user);
         String jwtToken = jwtUtils.generateJwtToken(userDetails);
 
         return new LoginResponse(
-
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
                 new ArrayList<>(user.getRoles()),
+                true,
                 jwtToken
         );
     }
@@ -95,12 +103,12 @@ public class AuthServiceImpl implements AuthService {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),loginRequest.getPassword()));
 
-       // log.debug("authentication : "+ authentication.getPrincipal().toString());
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String jwt = jwtUtils.generateJwtToken((UserDetails) authentication.getPrincipal());
+
+        log.info("jwt" + jwt);
 
         User user= userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("user not found"));
@@ -113,6 +121,5 @@ public class AuthServiceImpl implements AuthService {
         loginResponse.setToken(jwt);
 
         return loginResponse;
-
     }
 }
