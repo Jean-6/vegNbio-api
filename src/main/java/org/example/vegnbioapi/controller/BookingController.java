@@ -1,6 +1,7 @@
 package org.example.vegnbioapi.controller;
 
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.*;
@@ -22,6 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/booking")
 @Validated
+@Tag(name = "Booking Controller", description = "Manages user reservations (table, room and event) ")
 public class BookingController {
 
 

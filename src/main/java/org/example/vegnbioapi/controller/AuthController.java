@@ -1,6 +1,7 @@
 package org.example.vegnbioapi.controller;
 
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,6 +25,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Auth Controller", description = "Manages user operations such as signup, sign-in and logout")
     public class AuthController {
 
         @Autowired

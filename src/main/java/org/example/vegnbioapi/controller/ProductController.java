@@ -1,6 +1,7 @@
 package org.example.vegnbioapi.controller;
 
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.AddProductDto;
@@ -20,6 +21,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/api/product")
+@Tag(name = "Product Controller", description = "Manages supplier products to buy")
 public class ProductController {
 
     @Autowired

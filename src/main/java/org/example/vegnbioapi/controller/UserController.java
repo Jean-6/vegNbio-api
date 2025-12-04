@@ -1,6 +1,7 @@
 package org.example.vegnbioapi.controller;
 
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.ResponseWrapper;
@@ -22,6 +23,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/api/user")
+@Tag(name = "User Controller", description = "Manages user (restorer, consumer, supplier) operations such as role change")
 public class UserController {
 
     @Autowired

@@ -2,6 +2,7 @@ package org.example.vegnbioapi.controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.*;
@@ -22,6 +23,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequestMapping("/api/menu")
+@Tag(name = "Menu Controller", description = "Manages item menu ")
 public class MenuController {
 
     @Autowired

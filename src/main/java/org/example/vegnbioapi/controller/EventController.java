@@ -1,10 +1,10 @@
 package org.example.vegnbioapi.controller;
 
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vegnbioapi.dto.*;
-import org.example.vegnbioapi.model.Canteen;
 import org.example.vegnbioapi.model.Event;
 import org.example.vegnbioapi.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +20,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/api/event")
+@Tag(name = "Event Controller", description = "Manages CRUD operations on events")
 public class EventController {
 
     @Autowired
