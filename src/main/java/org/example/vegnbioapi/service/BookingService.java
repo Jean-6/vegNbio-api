@@ -12,6 +12,8 @@ public interface BookingService {
 
 
 
+
+    List<BookingView> getAdminBookings(BookingFilter filters);
     List<BookingView> getRestorerBookings(Principal principal, BookingFilter filters) ;
     List<Booking> getUserBookings(BookingFilter filters) ;
     TableBooking reserveTable(TableBookingDto booking) ;

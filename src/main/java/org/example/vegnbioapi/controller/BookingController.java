@@ -39,6 +39,16 @@ public class BookingController {
         return ResponseEntity.ok(
                 ResponseWrapper.ok("Restorer bookings ", hsr.getRequestURI(), reservations));
     }
+    @GetMapping(value = "/", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseWrapper<List<BookingView>>> getAdminBookings(
+            Principal principal,
+            @Validated @ModelAttribute BookingFilter filters,
+            HttpServletRequest hsr) {
+        log.info(">> Load admin bookings");
+        List<BookingView> reservations = bookingService.getAdminBookings(filters);
+        return ResponseEntity.ok(
+                ResponseWrapper.ok("Restorer bookings ", hsr.getRequestURI(), reservations));
+    }
 
     @GetMapping(value = "/user", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseWrapper<List<Booking>>> getUserBookings(

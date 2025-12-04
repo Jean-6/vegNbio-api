@@ -3,6 +3,7 @@ package org.example.vegnbioapi.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import org.example.vegnbioapi.dto.CanteenInfo;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
