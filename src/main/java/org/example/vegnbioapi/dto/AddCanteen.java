@@ -1,13 +1,10 @@
 package org.example.vegnbioapi.dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import org.example.vegnbioapi.model.Contact;
 import org.example.vegnbioapi.model.Location;
 import org.example.vegnbioapi.model.OpeningHours;
 
-import java.time.DayOfWeek;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
